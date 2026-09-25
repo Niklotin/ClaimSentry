@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AikaEngine.Application/AikaEngine.Application.csproj" />
+    <Project Path="src/AikaEngine.Domain/AikaEngine.Domain.csproj" />
+    <Project Path="src/AikaEngine.WebApi/AikaEngine.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AikaEngine.UnitTests/AikaEngine.UnitTests.csproj" />
+  </Folder>
+</Solution>

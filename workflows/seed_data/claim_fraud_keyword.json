@@ -1,0 +1,10 @@
+{
+  "claim_id": "CLM-1004",
+  "claimant_id": "CUST-FI-7701",
+  "category": "BICYCLE",
+  "incident_description": "Pyörä varastettu, ei kuittia koska ostettu pimeä käteinen kaupalla. Tarvitsen rahat heti perintä laskuihin.",
+  "claimed_amount": 750.00,
+  "clause_code": "HOME_BIKE_01",
+  "item_age_years": 1,
+  "has_police_report": false
+}

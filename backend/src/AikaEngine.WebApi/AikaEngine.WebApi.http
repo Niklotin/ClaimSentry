@@ -1,0 +1,55 @@
+@AikaEngine.WebApi_HostAddress = http://localhost:5000
+
+### Health Check
+GET {{AikaEngine.WebApi_HostAddress}}/health
+Accept: application/json
+
+###
+
+### List Policy Clauses
+GET {{AikaEngine.WebApi_HostAddress}}/tools/policy-clauses
+Accept: application/json
+
+###
+
+### Calculate Payout (Deterministic Rules Engine)
+POST {{AikaEngine.WebApi_HostAddress}}/tools/calculate-payout
+Content-Type: application/json
+
+{
+  "claimed_amount": 850.00,
+  "clause_code": "HOME_BIKE_01",
+  "item_age_years": 1,
+  "has_police_report": true
+}
+
+###
+
+### Fraud Risk Check
+POST {{AikaEngine.WebApi_HostAddress}}/tools/fraud-check
+Content-Type: application/json
+
+{
+  "claimant_id": "CLM-001",
+  "incident_description": "Bike stolen from backyard overnight",
+  "claimed_amount": 850.00
+}
+
+###
+
+### In-App Agent Triage (Requires server or client API key)
+POST {{AikaEngine.WebApi_HostAddress}}/api/agent/triage
+Content-Type: application/json
+
+{
+  "claim_id": "CLM-2026-TEST",
+  "claimant_id": "USR-1001",
+  "category": "home",
+  "incident_description": "Commuter bicycle stolen from locked yard overnight. Reported to police.",
+  "claimed_amount": 750.00,
+  "clause_code": "HOME_BIKE_01",
+  "item_age_years": 1,
+  "has_police_report": true
+}
+
+###

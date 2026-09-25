@@ -1,0 +1,3118 @@
+<!DOCTYPE html>
+<html lang="fi" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaimSentry | Vahinkojen käsittely- ja triagetyöpöytä</title>
+  <style>
+    :root {
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      
+      --primary-600: #2563eb;
+      --primary-700: #1d4ed8;
+      --primary-50: #eff6ff;
+      --primary-100: #dbeafe;
+
+      --emerald-600: #059669;
+      --emerald-50: #ecfdf5;
+      --emerald-700: #047857;
+
+      --amber-600: #d97706;
+      --amber-50: #fffbeb;
+      --amber-700: #b45309;
+
+      --rose-600: #e11d48;
+      --rose-50: #fff1f2;
+      --rose-700: #be123c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--slate-100);
+      color: var(--slate-800);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Bar */
+    .navbar {
+      height: 56px;
+      background: var(--slate-900);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid var(--slate-800);
+      flex-shrink: 0;
+      z-index: 30;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary-600), #4f46e5);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: #f8fafc;
+    }
+    .brand-env {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--slate-300);
+      margin-left: 0.25rem;
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .system-health-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+    .health-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding-left: 0.75rem;
+      border-left: 1px solid var(--slate-700);
+    }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--slate-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--slate-300);
+    }
+    .user-info {
+      line-height: 1.2;
+      text-align: right;
+    }
+    .user-name { font-size: 0.8rem; font-weight: 500; color: #f1f5f9; }
+    .user-role { font-size: 0.7rem; color: var(--slate-400); }
+
+    /* App Shell Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 230px;
+      background: white;
+      border-right: 1px solid var(--slate-200);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-section-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--slate-400);
+      padding: 1.25rem 1rem 0.5rem;
+    }
+    .sidebar-menu { list-style: none; padding: 0 0.5rem; }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      color: var(--slate-600);
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: all 0.15s ease;
+    }
+    .sidebar-item:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+    .sidebar-item.active {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      font-weight: 600;
+    }
+    .sidebar-item svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.6rem;
+      flex-shrink: 0;
+    }
+    .item-label { display: flex; align-items: center; }
+    .count-pill {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: var(--slate-100);
+      color: var(--slate-600);
+      font-weight: 600;
+    }
+    .count-pill.alert {
+      background: var(--amber-50);
+      color: var(--amber-700);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 1rem;
+      border-top: 1px solid var(--slate-200);
+      background: var(--slate-50);
+    }
+
+    /* Main Split View */
+    .workbench {
+      display: flex;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Queue Column (Left) */
+    .queue-pane {
+      width: 440px;
+      background: white;
+      border-right: 1px solid var(--slate-200);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      height: 100%;
+    }
+    .queue-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--slate-200);
+      background: white;
+    }
+    .queue-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .queue-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--slate-900);
+    }
+    .search-input-wrap {
+      position: relative;
+    }
+    .search-input-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--slate-400);
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.45rem 0.75rem 0.45rem 2.1rem;
+      border-radius: 6px;
+      border: 1px solid var(--slate-200);
+      font-size: 0.82rem;
+      outline: none;
+      background: var(--slate-50);
+    }
+    .search-input:focus {
+      background: white;
+      border-color: var(--primary-600);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .queue-filter-tabs {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.5rem 1rem;
+      background: var(--slate-50);
+      border-bottom: 1px solid var(--slate-200);
+      overflow-x: auto;
+    }
+    .filter-tab {
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--slate-600);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .filter-tab:hover {
+      background: var(--slate-200);
+      color: var(--slate-900);
+    }
+    .filter-tab.active {
+      background: white;
+      color: var(--primary-700);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .queue-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+    .queue-item {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--slate-100);
+      cursor: pointer;
+      transition: background 0.1s ease;
+      position: relative;
+    }
+    .queue-item:hover {
+      background: var(--slate-50);
+    }
+    .queue-item.selected {
+      background: var(--primary-50);
+      border-left: 3px solid var(--primary-600);
+    }
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+    .item-claim-id {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--slate-900);
+      font-family: monospace;
+    }
+    .item-time {
+      font-size: 0.7rem;
+      color: var(--slate-400);
+    }
+    .item-claimant {
+      font-size: 0.8rem;
+      color: var(--slate-600);
+      margin-bottom: 0.4rem;
+    }
+    .item-amounts {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .amount-claimed {
+      color: var(--slate-500);
+    }
+    .amount-payout {
+      font-weight: 700;
+      color: var(--primary-700);
+    }
+    .item-badges {
+      margin-top: 0.45rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+    }
+    .badge-hitl {
+      background: var(--amber-50);
+      color: var(--amber-700);
+      border: 1px solid rgba(217, 119, 6, 0.2);
+    }
+    .badge-approved {
+      background: var(--emerald-50);
+      color: var(--emerald-700);
+      border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+    .badge-rejected {
+      background: var(--rose-50);
+      color: var(--rose-700);
+      border: 1px solid rgba(225, 29, 72, 0.2);
+    }
+
+    /* Inspection Pane (Right) */
+    .detail-pane {
+      flex: 1;
+      height: 100%;
+      background: var(--slate-50);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--slate-400);
+      padding: 2rem;
+      text-align: center;
+    }
+    .detail-empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+      color: var(--slate-300);
+    }
+
+    .detail-content {
+      padding: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Detail Header */
+    .detail-header-card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .detail-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    .detail-claim-title h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+    .detail-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--slate-100);
+    }
+    .meta-item-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--slate-400);
+      letter-spacing: 0.4px;
+    }
+    .meta-item-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-top: 2px;
+    }
+
+    /* Warning/Alert Banner */
+    .alert-banner {
+      background: var(--amber-50);
+      border: 1px solid rgba(217, 119, 6, 0.25);
+      border-left: 4px solid var(--amber-600);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .alert-banner.alert-danger {
+      background: var(--rose-50);
+      border-color: rgba(225, 29, 72, 0.25);
+      border-left-color: var(--rose-600);
+    }
+    .alert-banner.alert-success {
+      background: var(--emerald-50);
+      border-color: rgba(5, 150, 105, 0.25);
+      border-left-color: var(--emerald-600);
+    }
+    .alert-icon { flex-shrink: 0; margin-top: 1px; }
+    .alert-title { font-size: 0.85rem; font-weight: 600; color: var(--slate-900); margin-bottom: 2px; }
+    .alert-desc { font-size: 0.8rem; color: var(--slate-700); line-height: 1.35; }
+
+    /* Section Cards */
+    .card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 0.85rem 1.25rem;
+      background: white;
+      border-bottom: 1px solid var(--slate-100);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-800);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+
+    /* Financial Math Table */
+    .math-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .math-table tr {
+      border-bottom: 1px solid var(--slate-100);
+    }
+    .math-table tr:last-child {
+      border-bottom: none;
+    }
+    .math-table td {
+      padding: 0.65rem 0.5rem;
+    }
+    .math-table .val-col {
+      text-align: right;
+      font-family: monospace;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+    .math-table .total-row {
+      background: var(--slate-50);
+      font-weight: 700;
+    }
+    .math-table .total-row td {
+      padding: 0.85rem 0.5rem;
+      color: var(--primary-700);
+      font-size: 1rem;
+    }
+
+    /* Fraud Risk Meter */
+    .risk-meter {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .risk-bar-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--slate-200);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .risk-bar {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Decision Actions Box */
+    .decision-card {
+      background: white;
+      border-radius: 8px;
+      border: 2px solid var(--slate-300);
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .decision-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 0.75rem;
+    }
+    .decision-form-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--slate-600);
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--slate-300);
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--primary-600);
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+    }
+    .decision-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--slate-100);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--primary-600);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--primary-700);
+    }
+    .btn-approve {
+      background: var(--emerald-600);
+      color: white;
+    }
+    .btn-approve:hover {
+      background: var(--emerald-700);
+    }
+    .btn-reject {
+      background: white;
+      border-color: var(--rose-600);
+      color: var(--rose-600);
+    }
+    .btn-reject:hover {
+      background: var(--rose-50);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--slate-600);
+    }
+    .btn-ghost:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+    .btn-outline-white {
+      background: transparent;
+      border-color: rgba(255,255,255,0.3);
+      color: white;
+    }
+    .btn-outline-white:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Policy Drawer Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-dialog {
+      background: white;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 650px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    .modal-head {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-body {
+      padding: 1.25rem;
+      overflow-y: auto;
+    }
+    .modal-foot {
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid var(--slate-200);
+      background: var(--slate-50);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--slate-900);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 200;
+      border: 1px solid var(--slate-700);
+    }
+    /* Modal Dialog Sizes */
+    .modal-dialog-lg {
+      max-width: 940px;
+      width: 95%;
+    }
+
+    /* Preset Chips */
+    .preset-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .preset-chip {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-200);
+      color: var(--slate-700);
+      border-radius: 9999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+    .preset-chip:hover {
+      background: var(--slate-200);
+      color: var(--slate-900);
+      border-color: var(--slate-300);
+    }
+    .preset-chip.active {
+      background: var(--primary-50);
+      border-color: var(--primary-600);
+      color: var(--primary-700);
+      font-weight: 600;
+    }
+
+    /* Trace Log Component */
+    .trace-container {
+      background: #0f172a;
+      color: #f1f5f9;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      max-height: 320px;
+      overflow-y: auto;
+      border: 1px solid var(--slate-800);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin-top: 0.75rem;
+    }
+    .trace-item {
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid var(--slate-600);
+      line-height: 1.45;
+    }
+    .trace-item.thinking {
+      border-left-color: #a855f7;
+      background: rgba(168, 85, 247, 0.09);
+    }
+    .trace-item.tool-call {
+      border-left-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.09);
+    }
+    .trace-item.tool-result {
+      border-left-color: #10b981;
+      background: rgba(16, 185, 129, 0.09);
+    }
+    .trace-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+    .trace-title {
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .trace-time {
+      font-size: 0.68rem;
+      color: var(--slate-400);
+    }
+    .trace-content {
+      color: #cbd5e1;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .trace-badge {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .badge-thinking { background: rgba(168, 85, 247, 0.25); color: #d8b4fe; }
+    .badge-tool { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+    .badge-result { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+
+    /* Security Notice Box */
+    .security-notice {
+      background: #f8fafc;
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--slate-600);
+      line-height: 1.45;
+    }
+    .security-notice strong { color: var(--slate-800); }
+
+    /* Password Input Wrap */
+    .input-action-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-action-wrap .form-input {
+      padding-right: 42px;
+    }
+    .input-action-btn {
+      position: absolute;
+      right: 8px;
+      background: none;
+      border: none;
+      color: var(--slate-400);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .input-action-btn:hover {
+      color: var(--slate-700);
+      background: var(--slate-100);
+    }
+
+    /* Spinner */
+    @keyframes cs-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .cs-spinner {
+      animation: cs-spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    /* Settings View Layout */
+    .settings-view {
+      display: none;
+      flex: 1;
+      height: 100%;
+      overflow-y: auto;
+      background: var(--slate-100);
+      padding: 1.5rem 2rem;
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .settings-header-title h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      letter-spacing: -0.3px;
+    }
+    .settings-header-title p {
+      font-size: 0.85rem;
+      color: var(--slate-500);
+      margin-top: 2px;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 1.5rem;
+      max-width: 1200px;
+    }
+    .settings-nav-card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      padding: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      position: sticky;
+      top: 0;
+    }
+    .settings-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      width: 100%;
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--slate-600);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: all 0.15s ease;
+    }
+    .settings-nav-btn:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+    .settings-nav-btn.active {
+      background: var(--primary-50);
+      color: var(--primary-700);
+      font-weight: 600;
+    }
+    .settings-nav-btn svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+    }
+
+    .settings-section-card {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      margin-bottom: 1.5rem;
+    }
+    .settings-card-head {
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--slate-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .settings-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .settings-card-desc {
+      font-size: 0.8rem;
+      color: var(--slate-500);
+      margin-top: 3px;
+    }
+
+    .setting-row {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 1.25rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--slate-100);
+      align-items: start;
+    }
+    .setting-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .setting-row:first-child {
+      padding-top: 0;
+    }
+    .setting-label-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-800);
+    }
+    .setting-label-hint {
+      font-size: 0.75rem;
+      color: var(--slate-400);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+    .setting-control-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .switch-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+    .switch-toggle-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary-600);
+      cursor: pointer;
+    }
+    .switch-toggle-text {
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--slate-700);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+    .status-pill.success {
+      background: var(--emerald-50);
+      color: var(--emerald-700);
+      border: 1px solid rgba(5, 150, 105, 0.25);
+    }
+    .status-pill.warning {
+      background: var(--amber-50);
+      color: var(--amber-700);
+      border: 1px solid rgba(217, 119, 6, 0.25);
+    }
+    .status-pill.danger {
+      background: var(--rose-50);
+      color: var(--rose-700);
+      border: 1px solid rgba(225, 29, 72, 0.25);
+    }
+
+    .range-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .range-slider-wrap input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary-600);
+    }
+    .range-val-badge {
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      background: var(--slate-100);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--slate-200);
+      min-width: 48px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Application Bar -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="brand-mark">CS</div>
+      <div>
+        <span class="brand-title">ClaimSentry</span>
+        <span class="brand-env">AIKA v2.4</span>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div class="system-health-pill" id="nav-system-status">
+        <span class="health-dot" id="nav-health-dot"></span>
+        <span id="nav-health-text">Deterministinen sääntömoottori aktiivinen (Lokaali)</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-primary" style="background:#3b82f6; border:none;" onclick="openAgentModal()">
+        <span>Aja tekoälyagentti</span>
+      </button>
+      <button class="btn btn-outline-white" onclick="openSettingsView()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Asetukset</span>
+      </button>
+      <button class="btn btn-outline-white" onclick="openSimulateModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        <span>Testaa syötteitä</span>
+      </button>
+      <a href="/swagger" target="_blank" class="btn btn-outline-white" style="font-size: 0.75rem; padding: 4px 8px;">
+        API Swagger
+      </a>
+      <div class="user-profile" onclick="openSettingsView()" style="cursor: pointer;" title="Avaa käsittelijäasetukset">
+        <div class="user-info">
+          <div class="user-name" id="nav-user-name">M. Virtanen</div>
+          <div class="user-role" id="nav-user-role">Korvauskäsittelijä</div>
+        </div>
+        <div class="avatar" id="nav-user-avatar">MV</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Shell Layout -->
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Työjonot</div>
+      <ul class="sidebar-menu">
+        <li>
+          <a class="sidebar-item active" id="nav-item-all" onclick="switchNavTab('ALL', this)">
+            <span class="item-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+              <span>Kaikki vahingot</span>
+            </span>
+            <span class="count-pill" id="badge-all">0</span>
+          </a>
+        </li>
+        <li>
+          <a class="sidebar-item" id="nav-item-hitl" onclick="switchNavTab('ESCALATED_HITL', this)">
+            <span class="item-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <span>Odottaa käsittelyä (HitL)</span>
+            </span>
+            <span class="count-pill alert" id="badge-hitl">0</span>
+          </a>
+        </li>
+        <li>
+          <a class="sidebar-item" id="nav-item-auto" onclick="switchNavTab('AUTO_APPROVED', this)">
+            <span class="item-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>STP Automaattihyväksynnät</span>
+            </span>
+            <span class="count-pill" id="badge-auto">0</span>
+          </a>
+        </li>
+        <li>
+          <a class="sidebar-item" id="nav-item-manual" onclick="switchNavTab('MANUAL_RESOLVED', this)">
+            <span class="item-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Käsittelijän ratkaisemat</span>
+            </span>
+            <span class="count-pill" id="badge-manual">0</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-section-title">Konfiguraatio & Ehdot</div>
+      <ul class="sidebar-menu">
+        <li>
+          <a class="sidebar-item" id="nav-item-policy" onclick="openPolicyModal()">
+            <span class="item-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>Vakuutusehtokirjasto</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <a class="sidebar-item" id="nav-item-settings" onclick="openSettingsView()">
+            <span class="item-label">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>Järjestelmäasetukset</span>
+            </span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div id="sidebar-rule-limits" style="font-size: 0.72rem; color: var(--slate-500); line-height: 1.4;">
+          <strong>AIKA Sääntöraja:</strong><br>
+          STP-hyväksyntä &le; 500,00 €<br>
+          Petosriskikatto &lt; 0.30
+        </div>
+      </div>
+    </aside>
+
+    <!-- Master-Detail Workbench -->
+    <div class="workbench" id="workbench-view">
+
+      <!-- Left: Queue Column -->
+      <div class="queue-pane">
+        <div class="queue-header">
+          <div class="queue-title-row">
+            <span class="queue-title" id="current-queue-name">Kaikki vahinkoilmoitukset</span>
+            <button class="btn btn-ghost" style="padding: 2px 6px; font-size: 0.75rem;" onclick="loadData()">Päivitä ↻</button>
+          </div>
+          <div class="search-input-wrap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="filter-search" class="search-input" placeholder="Hae tunnuksella, nimellä tai lausekkeella..." oninput="renderQueue()">
+          </div>
+        </div>
+
+        <div class="queue-filter-tabs">
+          <button class="filter-tab active" onclick="setQuickFilter('ALL', this)">Kaikki</button>
+          <button class="filter-tab" onclick="setQuickFilter('BIKE', this)">Polkupyörät</button>
+          <button class="filter-tab" onclick="setQuickFilter('ELEC', this)">Elektroniikka</button>
+          <button class="filter-tab" onclick="setQuickFilter('HIGH_VALUE', this)">> 500 €</button>
+        </div>
+
+        <ul class="queue-list" id="queue-items-list">
+          <!-- Loaded dynamically -->
+        </ul>
+      </div>
+
+      <!-- Right: Inspection Pane -->
+      <div class="detail-pane" id="detail-pane">
+        <div class="detail-empty-state" id="empty-state">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <h3 style="font-size: 1rem; font-weight: 600; color: var(--slate-700); margin-bottom: 0.25rem;">Valitse vahinko käsiteltäväksi</h3>
+          <p style="font-size: 0.82rem;">Klikkaa vasemman sarakkeen listasta vahinkotapausta avataksesi yksityiskohtaisen tarkastelun.</p>
+        </div>
+
+        <div class="detail-content" id="detail-content" style="display: none;">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Settings Full-Page View -->
+    <div class="settings-view" id="settings-view">
+      <!-- Settings Header -->
+      <div class="settings-header">
+        <div class="settings-header-title">
+          <h1>Järjestelmäasetukset &amp; Konfiguraatio</h1>
+          <p>Määritä tekoälymallit, STP-suorakäsittelyn sääntörajat, tietokantayhteydet ja käsittelijän valtuudet.</p>
+        </div>
+        <div style="display:flex; gap:0.6rem;">
+          <button class="btn btn-outline-white" style="color:var(--slate-700); background:white; border:1px solid var(--slate-300);" onclick="closeSettingsView()">
+            &larr; Takaisin työpöydälle
+          </button>
+          <button class="btn btn-primary" onclick="saveAllSystemSettings()">
+            Tallenna kaikki asetukset
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings Grid (Left: Tab Navigation, Right: Active Section Content) -->
+      <div class="settings-grid">
+
+        <!-- Navigation Tabs -->
+        <div class="settings-nav-card">
+          <button type="button" class="settings-nav-btn active" id="btn-tab-ai" onclick="switchSettingsTab('ai')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Tekoäly &amp; Agentit</span>
+          </button>
+          <button type="button" class="settings-nav-btn" id="btn-tab-rules" onclick="switchSettingsTab('rules')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+            <span>Sääntörajat &amp; STP</span>
+          </button>
+          <button type="button" class="settings-nav-btn" id="btn-tab-db" onclick="switchSettingsTab('db')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            <span>Järjestelmä &amp; Kanta</span>
+          </button>
+          <button type="button" class="settings-nav-btn" id="btn-tab-user" onclick="switchSettingsTab('user')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Käsittelijä &amp; Profiili</span>
+          </button>
+          <button type="button" class="settings-nav-btn" id="btn-tab-data" onclick="switchSettingsTab('data')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <span>Datanhallinta &amp; Testaus</span>
+          </button>
+        </div>
+
+        <!-- Settings Content Area -->
+        <div class="settings-content-area" style="min-width:0;">
+
+          <!-- 1. AI & Agents Section -->
+          <div id="section-settings-ai">
+            <div class="settings-section-card">
+              <div class="settings-card-head">
+                <div>
+                  <div class="settings-card-title">Tekoälyagentin yhteys ja OpenAI API</div>
+                  <div class="settings-card-desc">Hallitse OpenAI-integraatiota ja agentin päättelymalleja</div>
+                </div>
+                <span id="page-agent-status-badge" class="status-pill warning">Lokaali sääntömoottori</span>
+              </div>
+
+              <div class="security-notice" style="margin-bottom:1rem;">
+                <strong>Paikallinen testivarasto:</strong> API-avain tallennetaan ainoastaan tämän selaimen <code>localStorage</code>-muistiin. Palvelin käyttää avainta vain agentin ReAct-työkalukutsuihin. Jos avainta ei aseteta, järjestelmä suorittaa triagoinnin deterministisellä fallback-moottorilla.
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">OpenAI API -avain</div>
+                  <div class="setting-label-hint">Syötä tilisi API-avain muodossa sk-...</div>
+                </div>
+                <div class="setting-control-col">
+                  <div class="input-action-wrap">
+                    <input type="password" id="set-api-key" class="form-input" placeholder="sk-proj-..." autocomplete="off">
+                    <button type="button" class="input-action-btn" onclick="togglePageKeyVisibility()" title="Näytä / piilota avain">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.6rem; margin-top:4px;">
+                    <button type="button" class="btn btn-outline-white" style="background:var(--slate-100); color:var(--slate-800); border:1px solid var(--slate-300); padding:4px 10px; font-size:0.75rem;" onclick="testPageApiKey()">
+                      <span id="page-test-key-spinner" class="cs-spinner" style="display:none;">↻</span>
+                      <span id="page-test-key-text">Testaa yhteys</span>
+                    </button>
+                    <button type="button" class="btn btn-reject" style="padding:4px 10px; font-size:0.75rem;" onclick="clearPageApiKey()">
+                      Tyhjennä avain
+                    </button>
+                    <span id="page-test-key-status" style="font-size:0.78rem;"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Agentin päättelymalli</div>
+                  <div class="setting-label-hint">Valitse käytettävä LLM-malli</div>
+                </div>
+                <div class="setting-control-col">
+                  <select id="set-model" class="form-input" onchange="onModelSelectChange()">
+                    <option value="gpt-4o-mini">gpt-4o-mini (Suositeltu: nopea, kustannustehokas &lt; 0.01 €/vahinko)</option>
+                    <option value="gpt-4o">gpt-4o (Korkein päättelykyky &amp; monimutkaiset petosketjut)</option>
+                    <option value="gpt-4.1-mini">gpt-4.1-mini (Optimoitu uusi mini-malli)</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo (Kevyt perusmalli)</option>
+                    <option value="CUSTOM">Muu mukautettu mallitunnus...</option>
+                  </select>
+                  <input type="text" id="set-custom-model" class="form-input" placeholder="Esim. ft:gpt-4o-mini:org:custom-name" style="display:none; margin-top:4px;">
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Päättelyn lämpötila (Temperature)</div>
+                  <div class="setting-label-hint">Deterministiselle vakuutuskäsittelylle suositellaan matalaa arvoa (0.00 – 0.20)</div>
+                </div>
+                <div class="setting-control-col">
+                  <div class="range-slider-wrap">
+                    <input type="range" id="set-temperature" min="0" max="1" step="0.05" value="0.10" oninput="document.getElementById('badge-temp-val').textContent = parseFloat(this.value).toFixed(2)">
+                    <span class="range-val-badge" id="badge-temp-val">0.10</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Maksimi työkalusilmukat (Max Iterations)</div>
+                  <div class="setting-label-hint">Kuinka monta työkalukutsua agentti voi tehdä yhdessä triagointitapahtumassa</div>
+                </div>
+                <div class="setting-control-col">
+                  <div class="range-slider-wrap">
+                    <input type="range" id="set-max-iter" min="1" max="10" step="1" value="5" oninput="document.getElementById('badge-iter-val').textContent = this.value">
+                    <span class="range-val-badge" id="badge-iter-val">5</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">n8n Workflow Orkestrointi</div>
+                  <div class="setting-label-hint">Ulkoinen LangChain AI Agentti -webhook</div>
+                </div>
+                <div class="setting-control-col">
+                  <input type="url" id="set-n8n-url" class="form-input" value="http://localhost:5678/webhook/claims-triage" placeholder="http://localhost:5678/webhook/...">
+                  <div style="display:flex; align-items:center; gap:0.6rem; margin-top:4px;">
+                    <button type="button" class="btn btn-outline-white" style="background:var(--slate-100); color:var(--slate-800); border:1px solid var(--slate-300); padding:4px 10px; font-size:0.75rem;" onclick="testN8nConnection()">
+                      <span id="n8n-spinner" class="cs-spinner" style="display:none;">↻</span>
+                      <span>Testaa n8n yhteys</span>
+                    </button>
+                    <span id="n8n-status-text" style="font-size:0.78rem; color:var(--slate-500);">Valmiina</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 2. Rules & STP Automation Section -->
+          <div id="section-settings-rules" style="display:none;">
+            <div class="settings-section-card">
+              <div class="settings-card-head">
+                <div>
+                  <div class="settings-card-title">STP-automaatio ja sääntövaltuudet</div>
+                  <div class="settings-card-desc">Suorakäsittelyn (Straight-Through Processing) ja petoshälytysten kynnysarvot</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">STP-automaattihyväksynnän raja (€)</div>
+                  <div class="setting-label-hint">Vahingot alle tämän rajan hyväksytään automaattisesti ilman käsittelijää, jos petosriski on matala</div>
+                </div>
+                <div class="setting-control-col">
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="number" step="50" min="0" max="10000" id="set-stp-limit" class="form-input" style="max-width:200px;" value="500.00">
+                    <span style="font-weight:600; color:var(--slate-600);">EUR</span>
+                  </div>
+                  <div style="font-size:0.72rem; color:var(--slate-500);">AIKA-standardi: 500,00 € koti- ja matkavahingoissa.</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Petosriskin hälytyskynnys (0.00 – 1.00)</div>
+                  <div class="setting-label-hint">Jos riskiarvio on vähintään tämä, tapaus eskaloidaan käsittelijälle (HitL) ja SIU-tutkintaan</div>
+                </div>
+                <div class="setting-control-col">
+                  <div class="range-slider-wrap">
+                    <input type="range" id="set-fraud-thresh" min="0.05" max="0.95" step="0.05" value="0.30" oninput="document.getElementById('badge-fraud-val').textContent = parseFloat(this.value).toFixed(2)">
+                    <span class="range-val-badge" id="badge-fraud-val">0.30</span>
+                  </div>
+                  <div style="font-size:0.72rem; color:var(--slate-500); margin-top:2px;">Oletus 0.30: havaitsee käteiskaupat, puuttuvat kuitit ja epäilyttävät ajankohdat.</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Pakolliset sääntöehdot</div>
+                  <div class="setting-label-hint">Vakuutussopimuksen sitovat tarkistussäännöt</div>
+                </div>
+                <div class="setting-control-col">
+                  <label class="switch-toggle-row">
+                    <input type="checkbox" id="set-req-police" checked>
+                    <span class="switch-toggle-text">Vaadi virallinen rikosilmoitus kaikissa varkausvahingoissa (HOME_BIKE_01, TRAVEL_LUGG_01)</span>
+                  </label>
+                  <label class="switch-toggle-row" style="margin-top:6px;">
+                    <input type="checkbox" id="set-req-receipt" checked>
+                    <span class="switch-toggle-text">Vaadi ostokuitti tai valtuutetun huollon kustannusarvio yli 1 000 € elektroniikassa</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Ikävähennyssääntö</div>
+                  <div class="setting-label-hint">Vuosittainen arvonalenema ensimmäisen käyttövuoden jälkeen</div>
+                </div>
+                <div class="setting-control-col">
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="number" min="0" max="50" id="set-deprec-rate" class="form-input" style="max-width:120px;" value="10">
+                    <span style="font-weight:600; color:var(--slate-600);">% / vuosi</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Oletusomavastuut (€)</div>
+                  <div class="setting-label-hint">Perusvähennykset vakuutuslajeittain</div>
+                </div>
+                <div class="setting-control-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                  <div>
+                    <label class="form-label">Kotivakuutus (Irtaimisto)</label>
+                    <input type="number" step="10" id="set-home-ded" class="form-input" value="150.00">
+                  </div>
+                  <div>
+                    <label class="form-label">Matkavakuutus (Matkatavarat)</label>
+                    <input type="number" step="10" id="set-travel-ded" class="form-input" value="100.00">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 3. System & Database Section -->
+          <div id="section-settings-db" style="display:none;">
+            <div class="settings-section-card">
+              <div class="settings-card-head">
+                <div>
+                  <div class="settings-card-title">Järjestelmä, tietokanta ja valvonta</div>
+                  <div class="settings-card-desc">Tietokantayhteys, auditointiloki ja petostutkintayksikön (SIU) reititykset</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">PostgreSQL Pääkanta</div>
+                  <div class="setting-label-hint">Audit-lokien ja ehtojen pysyväistallennus</div>
+                </div>
+                <div class="setting-control-col">
+                  <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:6px; padding:0.75rem 1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                      <span style="font-family:monospace; font-size:0.8rem; font-weight:600; color:var(--slate-800);">Host=localhost:5432; Database=aika_claims</span>
+                      <span id="page-db-status-pill" class="status-pill success">Yhteys OK (Suojattu välimuisti)</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--slate-500);">Circuit breaker -suojaus aktiivinen (ei TCP-aikakatkaisuhäiriöitä).</div>
+                  </div>
+                  <div style="margin-top:6px;">
+                    <button type="button" class="btn btn-outline-white" style="background:var(--slate-100); color:var(--slate-800); border:1px solid var(--slate-300); font-size:0.75rem; padding:4px 10px;" onclick="testDbConnection()">
+                      <span id="db-spinner" class="cs-spinner" style="display:none;">↻</span>
+                      <span>Mittaa tietokannan vasteaika</span>
+                    </button>
+                    <span id="db-latency-text" style="font-size:0.78rem; color:var(--slate-500); margin-left:8px;"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Auditointilokin säilytys</div>
+                  <div class="setting-label-hint">Finanssivalvonnan vaatimukset täyttävä arkistointi</div>
+                </div>
+                <div class="setting-control-col">
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="number" id="set-retention-days" class="form-input" style="max-width:120px;" value="365">
+                    <span style="font-weight:600; color:var(--slate-600);">päivää</span>
+                  </div>
+                  <div style="font-size:0.72rem; color:var(--slate-500);">Kaikki agentin päättelylokit, syötteet ja käsittelijän ratkaisut arkistoidaan muuttumattomina.</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">SIU (Special Investigation Unit) Reititys</div>
+                  <div class="setting-label-hint">Erikoistutkinnan vastaanottaja korkean petosriskin tapauksissa</div>
+                </div>
+                <div class="setting-control-col">
+                  <input type="email" id="set-siu-email" class="form-input" value="siu-alerts@claimsentry.internal">
+                  <label class="switch-toggle-row" style="margin-top:4px;">
+                    <input type="checkbox" id="set-siu-auto-alert" checked>
+                    <span class="switch-toggle-text">Lähetä välitön SIU-hälytys kun riskipisteet &ge; 0.70</span>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 4. Adjuster Profile & UI Section -->
+          <div id="section-settings-user" style="display:none;">
+            <div class="settings-section-card">
+              <div class="settings-card-head">
+                <div>
+                  <div class="settings-card-title">Korvauskäsittelijän profiili ja työskentelytila</div>
+                  <div class="settings-card-desc">Käsittelijän henkilötiedot, valtuustasot ja käyttöliittymän käytettävyys</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Käsittelijän nimi &amp; tunniste</div>
+                  <div class="setting-label-hint">Näkyy auditointilokissa ja järjestelmän yläpalkissa</div>
+                </div>
+                <div class="setting-control-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                  <div>
+                    <label class="form-label">Käsittelijän nimi</label>
+                    <input type="text" id="set-user-name" class="form-input" value="M. Virtanen">
+                  </div>
+                  <div>
+                    <label class="form-label">Käsittelijätunnus</label>
+                    <input type="text" id="set-user-id" class="form-input" value="ADJ-FI-4029" style="font-family:monospace;">
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Rooli &amp; Henkilökohtainen valtuus</div>
+                  <div class="setting-label-hint">Käsittelijän enimmäishyväksyntäraja</div>
+                </div>
+                <div class="setting-control-col" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                  <div>
+                    <label class="form-label">Tehtävänimike</label>
+                    <input type="text" id="set-user-role" class="form-input" value="Korvauskäsittelijä">
+                  </div>
+                  <div>
+                    <label class="form-label">Valtuusraja (€)</label>
+                    <input type="number" step="500" id="set-user-limit" class="form-input" value="5000.00">
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Käyttöliittymäilmoitukset</div>
+                  <div class="setting-label-hint">Vahvistukset ja automaattivalinnat työpöydällä</div>
+                </div>
+                <div class="setting-control-col">
+                  <label class="switch-toggle-row">
+                    <input type="checkbox" id="set-toast-enabled" checked>
+                    <span class="switch-toggle-text">Näytä ilmoitusbanneri (Toast) aina päätöksen jälkeen</span>
+                  </label>
+                  <label class="switch-toggle-row" style="margin-top:6px;">
+                    <input type="checkbox" id="set-autoselect-first" checked>
+                    <span class="switch-toggle-text">Valitse automaattisesti listan ensimmäinen vahinko suodatuksen vaihtuessa</span>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 5. Data Management & Testing Section -->
+          <div id="section-settings-data" style="display:none;">
+            <div class="settings-section-card">
+              <div class="settings-card-head">
+                <div>
+                  <div class="settings-card-title">Testidatan ja välimuistin hallinta</div>
+                  <div class="settings-card-desc">Hallitse testitapauksia, nollaa kokeiluasetukset ja tyhjennä välimuisti</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Generoi testivahinkoja</div>
+                  <div class="setting-label-hint">Luo 5 erilaista realistista vahinkotapausta jonoihin</div>
+                </div>
+                <div class="setting-control-col">
+                  <button type="button" class="btn btn-outline-white" style="background:var(--primary-50); color:var(--primary-700); border:1px solid rgba(37,99,235,0.3); max-width:280px;" onclick="generateBatchTestClaims()">
+                    Generoi 5 testitapausta jonoon
+                  </button>
+                  <div style="font-size:0.72rem; color:var(--slate-500);">Luo pyörävarkauksia, elektroniikkavahinkoja ja korkean riskin petostapauksia.</div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Tehdasasetusten palautus</div>
+                  <div class="setting-label-hint">Palauttaa kaikki STP-rajat, mallit ja parametrit alkuperäisarvoihin</div>
+                </div>
+                <div class="setting-control-col">
+                  <button type="button" class="btn btn-outline-white" style="background:white; color:var(--slate-700); border:1px solid var(--slate-300); max-width:220px;" onclick="resetAllDefaults()">
+                    Palauta oletusasetukset
+                  </button>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label-title">Välimuistin ja avainten tyhjennys</div>
+                  <div class="setting-label-hint">Poistaa kaikki selaimeen tallennetut asetukset ja avaimet</div>
+                </div>
+                <div class="setting-control-col">
+                  <button type="button" class="btn btn-reject" style="max-width:220px;" onclick="clearAllLocalStorage()">
+                    Tyhjennä selaimen muisti
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Policy Clauses Modal -->
+  <div class="modal-overlay" id="policy-modal">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--slate-900);">Voimassa olevat vakuutusehdot ja säännöt</h3>
+        <button class="btn btn-ghost" style="padding: 2px 6px;" onclick="closePolicyModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="policy-modal-body">
+        Ladataan ehtoja...
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closePolicyModal()">Sulje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Claim Simulator Modal -->
+  <div class="modal-overlay" id="simulate-modal">
+    <div class="modal-dialog" style="max-width: 540px;">
+      <div class="modal-head">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--slate-900);">Simuloi saapuva vahinkoilmoitus</h3>
+        <button class="btn btn-ghost" style="padding: 2px 6px;" onclick="closeSimulateModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--slate-600); margin-bottom: 1rem;">
+          Valitse esitestattu skenaario ajaaksesi sen reaaliajassa sääntömoottorin ja auditointilokin läpi:
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <button class="btn btn-ghost" style="text-align: left; justify-content: flex-start; border: 1px solid var(--slate-200); padding: 0.75rem;" onclick="triggerSim(1)">
+            <div>
+              <strong style="color: var(--slate-900); display: block; font-size: 0.85rem;">Kallis pyörävarkaus 800,00 € (Vaatii käsittelijän)</strong>
+              <span style="font-size: 0.75rem; color: var(--slate-500);">Ikä 2v (-80 €), omavastuu -150 € &rarr; Korvaus 570,00 € (> 500 € kynnys &rarr; HitL)</span>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" style="text-align: left; justify-content: flex-start; border: 1px solid var(--slate-200); padding: 0.75rem;" onclick="triggerSim(2)">
+            <div>
+              <strong style="color: var(--slate-900); display: block; font-size: 0.85rem;">Peruspyörävarkaus 450,00 € (STP-automaattihyväksyntä)</strong>
+              <span style="font-size: 0.75rem; color: var(--slate-500);">Ikä 1v, rikosilmoitus OK, omavastuu -150 € &rarr; Korvaus 300,00 € (&le; 500 € STP)</span>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" style="text-align: left; justify-content: flex-start; border: 1px solid var(--slate-200); padding: 0.75rem;" onclick="triggerSim(3)">
+            <div>
+              <strong style="color: var(--slate-900); display: block; font-size: 0.85rem;">Epäilyttävä vahinko / Petosavainsanat</strong>
+              <span style="font-size: 0.75rem; color: var(--slate-500);">Syöte: "pimeä käteinen kauppa, ei kuittia, perintä" &rarr; Riski 0.95 &rarr; SIU-tutkintaan</span>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" style="text-align: left; justify-content: flex-start; border: 1px solid var(--slate-200); padding: 0.75rem;" onclick="triggerSim(4)">
+            <div>
+              <strong style="color: var(--slate-900); display: block; font-size: 0.85rem;">Kannettava tietokone 1 800,00 €</strong>
+              <span style="font-size: 0.75rem; color: var(--slate-500);">Kahvivahinko. Lauseke HOME_ELEC_01. Omavastuu -150 € &rarr; Korvaus 1 650,00 €</span>
+            </div>
+          </button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeSimulateModal()">Sulje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-dialog" style="max-width: 580px;">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <div style="width:28px; height:28px; background:var(--primary-50); border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--primary-600);">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <h3 style="font-size: 1rem; font-weight: 700; color: var(--slate-900);">Tekoälyagentin asetukset</h3>
+        </div>
+        <button class="btn btn-ghost" style="padding: 2px 6px;" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="security-notice">
+          <strong>Testaustilan huomautus:</strong> Syöttämäsi OpenAI API -avain tallennetaan ainoastaan tämän selaimen paikalliseen muistiin (<code>localStorage</code>) kehitys- ja testaustarkoituksiin. Sitä ei tallenneta palvelimen pysyvään tietokantaan. Jos avainta ei anneta, järjestelmä käyttää paikallista determinististä sääntömoottoria.
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label class="form-label">OpenAI API -avain</label>
+          <div class="input-action-wrap">
+            <input type="password" id="cfg-api-key" class="form-input" placeholder="sk-proj-..." autocomplete="off">
+            <button type="button" class="input-action-btn" onclick="toggleKeyVisibility()" title="Näytä / piilota avain">
+              <svg id="eye-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+          <div style="font-size:0.72rem; color:var(--slate-500); margin-top:4px;">
+            Muoto: <code>sk-...</code> (OpenAI Platform).
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label class="form-label">Agenttimalli (LLM Model)</label>
+          <select id="cfg-model" class="form-input">
+            <option value="gpt-4o-mini">gpt-4o-mini (Suositeltu: nopea, kustannustehokas)</option>
+            <option value="gpt-4o">gpt-4o (Korkein päättelykyky & tarkkuus)</option>
+            <option value="gpt-4.1-mini">gpt-4.1-mini (Uusin mini-malli)</option>
+            <option value="gpt-3.5-turbo">gpt-3.5-turbo (Kevyt perustesti)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.5rem;">
+          <button type="button" class="btn btn-outline-white" style="background:var(--slate-100); color:var(--slate-800); border:1px solid var(--slate-300);" onclick="testApiKey()">
+            <span id="test-key-spinner" class="cs-spinner" style="display:none;">↻</span>
+            <span id="test-key-text">Testaa yhteys</span>
+          </button>
+          <div id="test-key-status" style="font-size:0.8rem; font-weight:500;"></div>
+        </div>
+      </div>
+      <div class="modal-foot" style="justify-content:space-between;">
+        <button class="btn btn-reject" style="font-size:0.78rem;" onclick="clearApiKey()">Tyhjennä avain</button>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-ghost" onclick="closeSettingsModal()">Peruuta</button>
+          <button class="btn btn-primary" onclick="saveSettings()">Tallenna asetukset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Agent Triaging & Tool-Calling Modal -->
+  <div class="modal-overlay" id="agent-modal">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-head">
+        <div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900);">AIKA-tekoälyagentti – Vahinkotriagointi</h3>
+            <span id="modal-agent-mode-badge" class="badge" style="background:var(--primary-50); color:var(--primary-700); border:1px solid rgba(37,99,235,0.2);">Ladataan...</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--slate-500); margin-top:2px;">
+            Agentti analysoi ilmoituksen, hakee vakuutusehdot ja suorittaa deterministiset laskelmat työkalukutsuilla (Tool-Calling / ReAct).
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="padding: 2px 6px;" onclick="closeAgentModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Preset Selector -->
+        <div>
+          <label class="form-label" style="margin-bottom:0.4rem;">Pikavalitse testiskenaario:</label>
+          <div class="preset-chips-wrap">
+            <button type="button" class="preset-chip active" onclick="selectPreset(1, this)">
+              Varastettu sähköpyörä 850 € (HitL)
+            </button>
+            <button type="button" class="preset-chip" onclick="selectPreset(2, this)">
+              Rikkoutunut älypuhelin 380 € (STP Läpimeno)
+            </button>
+            <button type="button" class="preset-chip" onclick="selectPreset(3, this)">
+              Epäilyttävä käteiskauppa 950 € (Petosriski)
+            </button>
+            <button type="button" class="preset-chip" onclick="selectPreset(4, this)">
+              Kahvivahinko MacBook 1 800 € (HitL)
+            </button>
+            <button type="button" class="preset-chip" onclick="selectPreset('CUSTOM', this)">
+              Kirjoita oma vahinkoilmoitus
+            </button>
+          </div>
+        </div>
+
+        <!-- Claim Form Fields -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.85rem; margin-bottom:0.85rem;">
+          <div>
+            <label class="form-label">Vahinkotunnus (Claim ID)</label>
+            <input type="text" id="agent-claim-id" class="form-input" style="font-family:monospace;">
+          </div>
+          <div>
+            <label class="form-label">Hakijan asiakastunnus</label>
+            <input type="text" id="agent-claimant-id" class="form-input" style="font-family:monospace;">
+          </div>
+          <div>
+            <label class="form-label">Kategoria</label>
+            <select id="agent-category" class="form-input" onchange="onCategoryChange()">
+              <option value="HOME_CONTENTS">HOME_CONTENTS (Kotivakuutus)</option>
+              <option value="TRAVEL_LOSS">TRAVEL_LOSS (Matkavakuutus)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Sovellettava vakuutusehto</label>
+            <select id="agent-clause-code" class="form-input">
+              <option value="HOME_BIKE_01">HOME_BIKE_01 (Polkupyörät, omavastuu 150 €, katto 2000 €)</option>
+              <option value="HOME_ELEC_01">HOME_ELEC_01 (Kodinelektroniikka, omavastuu 150 €, katto 3000 €)</option>
+              <option value="TRAVEL_LUGG_01">TRAVEL_LUGG_01 (Matkatavarat, omavastuu 100 €, katto 1500 €)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Haettu vahingon määrä (€)</label>
+            <input type="number" step="0.01" id="agent-amount" class="form-input" value="850.00">
+          </div>
+          <div>
+            <label class="form-label">Esineen ikä (vuotta)</label>
+            <input type="number" min="0" max="20" id="agent-age" class="form-input" value="2">
+          </div>
+        </div>
+
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; font-weight:600; color:var(--slate-800); cursor:pointer;">
+            <input type="checkbox" id="agent-police-report" checked style="width:16px; height:16px; accent-color:var(--primary-600);">
+            <span>Virallinen poliisin rikosilmoitus liitteenä</span>
+          </label>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label class="form-label">Vahinkokuvaus / Asiakkaan selvitys tapahtumasta</label>
+          <textarea id="agent-desc" class="form-input" rows="3" style="resize:vertical;"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--slate-100); padding-top:0.85rem;">
+          <div style="font-size:0.75rem; color:var(--slate-500);">
+            Tekoälyagentti suorittaa päättelyn ja kutsuu lokaaleja sääntötyökaluja.
+          </div>
+          <button id="btn-run-agent" class="btn btn-primary" onclick="runAgentTriage()">
+            <span id="agent-spinner" class="cs-spinner" style="display:none;">↻</span>
+            <span id="agent-run-label">Käynnistä tekoälyagentti</span>
+          </button>
+        </div>
+
+        <!-- Live Trace & Output Section (Initially hidden) -->
+        <div id="agent-trace-section" style="display:none; margin-top:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="sidebar-section-title" style="padding:0; color:var(--slate-700);">Agentin suoritusloki (Trace)</span>
+            <span id="trace-step-count" style="font-size:0.7rem; color:var(--slate-500);">0 vaihetta</span>
+          </div>
+
+          <div class="trace-container" id="agent-trace-container">
+            <!-- Trace steps inserted dynamically -->
+          </div>
+
+          <!-- Final Decision Summary Card -->
+          <div id="agent-decision-summary" class="decision-card" style="display:none; margin-top:1rem; border-color:var(--primary-600);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+              <div>
+                <span class="meta-item-label">Agentin ratkaisusuositus</span>
+                <div id="res-rec-badge" style="margin-top:4px;"></div>
+              </div>
+              <div style="text-align:right;">
+                <span class="meta-item-label">Laskettu korvaus</span>
+                <div id="res-payout-val" style="font-size:1.15rem; font-weight:700; color:var(--primary-700); margin-top:2px;"></div>
+              </div>
+            </div>
+
+            <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:6px; padding:0.75rem; margin-bottom:0.75rem;">
+              <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; color:var(--slate-500); margin-bottom:3px;">Agentin perustelut:</div>
+              <div id="res-justification" style="font-size:0.82rem; color:var(--slate-800); line-height:1.4;"></div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:0.75rem; color:var(--slate-600);">
+                Petosriski: <strong id="res-fraud-score">0.00</strong> &bull; Vaatii käsittelijän tarkastuksen: <strong id="res-hitl-req">Kyllä</strong>
+              </div>
+              <button class="btn btn-primary" onclick="openClaimInWorkbench()">
+                Avaa vahinko työpöydälle &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeAgentModal()">Sulje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast-msg">Päätös tallennettu!</div>
+
+  <script>
+    let claims = [];
+    let selectedClaimId = null;
+    let activeNavFilter = 'ALL';
+    let activeQuickFilter = 'ALL';
+
+    // Formatters
+    const formatEUR = (val) => new Intl.NumberFormat('fi-FI', { style: 'currency', currency: 'EUR' }).format(val || 0);
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/claims/audit-log');
+        claims = await res.json();
+        updateBadges();
+        renderQueue();
+
+        if (selectedClaimId) {
+          const current = claims.find(c => c.id === selectedClaimId);
+          if (current) renderDetail(current);
+        }
+      } catch (err) {
+        console.error('Failed to load audit logs:', err);
+      }
+    }
+
+    function updateBadges() {
+      document.getElementById('badge-all').textContent = claims.length;
+      document.getElementById('badge-hitl').textContent = claims.filter(c => c.decision === 'ESCALATED_HITL').length;
+      document.getElementById('badge-auto').textContent = claims.filter(c => c.decision === 'AUTO_APPROVED').length;
+      document.getElementById('badge-manual').textContent = claims.filter(c => c.decision.startsWith('MANUALLY_')).length;
+    }
+
+    function switchNavTab(tab, el) {
+      const setView = document.getElementById('settings-view');
+      const wbView = document.getElementById('workbench-view');
+      if (setView && setView.style.display !== 'none') {
+        setView.style.display = 'none';
+        wbView.style.display = 'flex';
+      }
+
+      activeNavFilter = tab;
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      const titles = {
+        'ALL': 'Kaikki vahinkoilmoitukset',
+        'ESCALATED_HITL': 'Odottaa käsittelyä (HitL)',
+        'AUTO_APPROVED': 'STP-automaattihyväksynnät',
+        'MANUAL_RESOLVED': 'Käsittelijän ratkaisemat'
+      };
+      document.getElementById('current-queue-name').textContent = titles[tab] || 'Vahinkojono';
+      renderQueue();
+    }
+
+    function setQuickFilter(qf, el) {
+      activeQuickFilter = qf;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      renderQueue();
+    }
+
+    function renderQueue() {
+      const listEl = document.getElementById('queue-items-list');
+      const searchVal = document.getElementById('filter-search').value.toLowerCase().trim();
+
+      let filtered = claims;
+
+      // Nav filter
+      if (activeNavFilter === 'ESCALATED_HITL') {
+        filtered = filtered.filter(c => c.decision === 'ESCALATED_HITL');
+      } else if (activeNavFilter === 'AUTO_APPROVED') {
+        filtered = filtered.filter(c => c.decision === 'AUTO_APPROVED');
+      } else if (activeNavFilter === 'MANUAL_RESOLVED') {
+        filtered = filtered.filter(c => c.decision.startsWith('MANUALLY_'));
+      }
+
+      // Quick category/amount filter
+      if (activeQuickFilter === 'BIKE') {
+        filtered = filtered.filter(c => (c.ai_reasoning || '').includes('BIKE') || (c.ai_reasoning || '').includes('pyörä'));
+      } else if (activeQuickFilter === 'ELEC') {
+        filtered = filtered.filter(c => (c.ai_reasoning || '').includes('ELEC') || (c.ai_reasoning || '').includes('kannettava'));
+      } else if (activeQuickFilter === 'HIGH_VALUE') {
+        filtered = filtered.filter(c => c.calculated_payout > 500);
+      }
+
+      // Search
+      if (searchVal) {
+        filtered = filtered.filter(c => 
+          (c.claim_id || '').toLowerCase().includes(searchVal) ||
+          (c.claimant_id || '').toLowerCase().includes(searchVal) ||
+          (c.ai_reasoning || '').toLowerCase().includes(searchVal)
+        );
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<li style="padding: 2rem 1rem; text-align: center; color: var(--slate-400); font-size: 0.8rem;">Ei vahinkoja valituilla suodattimilla.</li>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(c => {
+        const isSelected = c.id === selectedClaimId;
+        const isHitL = c.decision === 'ESCALATED_HITL';
+        const isApproved = c.decision === 'AUTO_APPROVED' || c.decision === 'MANUALLY_APPROVED';
+        const isRejected = c.decision === 'REJECTED' || c.decision === 'MANUALLY_REJECTED';
+
+        let badgeHtml = '';
+        if (isHitL) {
+          badgeHtml = '<span class="badge badge-hitl">HitL Käsittely</span>';
+        } else if (isApproved) {
+          badgeHtml = `<span class="badge badge-approved">${c.decision === 'AUTO_APPROVED' ? 'STP Hyväksytty' : 'Käsittelijä hyväksynyt'}</span>`;
+        } else if (isRejected) {
+          badgeHtml = `<span class="badge badge-rejected">${c.decision === 'REJECTED' ? 'Hylätty' : 'Käsittelijä hylännyt'}</span>`;
+        }
+
+        const dateStr = new Date(c.created_at).toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <li class="queue-item ${isSelected ? 'selected' : ''}" onclick="selectClaim('${c.id}')">
+            <div class="item-top">
+              <span class="item-claim-id">${c.claim_id}</span>
+              <span class="item-time">${dateStr}</span>
+            </div>
+            <div class="item-claimant">Hakija: <strong>${c.claimant_id}</strong></div>
+            <div class="item-amounts">
+              <span class="amount-claimed">Haettu: ${formatEUR(c.claimed_amount)}</span>
+              <span>&rarr;</span>
+              <span class="amount-payout">Korvaus: ${formatEUR(c.calculated_payout)}</span>
+            </div>
+            <div class="item-badges">
+              ${badgeHtml}
+              ${c.calculated_payout > 500 ? '<span class="badge" style="background:#f1f5f9; color:var(--slate-600);">> 500 €</span>' : ''}
+            </div>
+          </li>
+        `;
+      }).join('');
+    }
+
+    function selectClaim(id) {
+      selectedClaimId = id;
+      renderQueue();
+      const claim = claims.find(c => c.id === id);
+      if (claim) {
+        renderDetail(claim);
+      }
+    }
+
+    function renderDetail(claim) {
+      document.getElementById('empty-state').style.display = 'none';
+      const container = document.getElementById('detail-content');
+      container.style.display = 'block';
+
+      const isHitLPending = claim.decision === 'ESCALATED_HITL';
+      const isApproved = claim.decision === 'AUTO_APPROVED' || claim.decision === 'MANUALLY_APPROVED';
+      const isRejected = claim.decision === 'REJECTED' || claim.decision === 'MANUALLY_REJECTED';
+
+      const createdDate = new Date(claim.created_at).toLocaleString('fi-FI');
+
+      // Detect alert type
+      let bannerHtml = '';
+      if (isHitLPending) {
+        bannerHtml = `
+          <div class="alert-banner">
+            <div class="alert-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+              <div class="alert-title">Vaatii korvauskäsittelijän hyväksynnän (Human-in-the-Loop)</div>
+              <div class="alert-desc">
+                ${claim.calculated_payout > 500 ? `Korvaussumma ${formatEUR(claim.calculated_payout)} ylittää suoran automaattihyväksynnän 500,00 € rajan. ` : ''}
+                ${(claim.ai_reasoning || '').includes('PETOS') || (claim.ai_reasoning || '').includes('avainsana') ? 'Vahinkoilmoituksessa havaittu kohonnut petosriski. ' : ''}
+                ${(claim.ai_reasoning || '').includes('rikosilmoitus') ? 'Puuttuva tai puutteellinen rikosilmoitus vaaditaan varkausvahingoissa.' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (isApproved) {
+        bannerHtml = `
+          <div class="alert-banner alert-success">
+            <div class="alert-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="alert-title">Vahinko hyväksytty maksuun</div>
+              <div class="alert-desc">Päätöstila: <strong>${claim.decision}</strong>. Korvaussumma ${formatEUR(claim.calculated_payout)} lähetetty maksatukseen.</div>
+            </div>
+          </div>
+        `;
+      } else {
+        bannerHtml = `
+          <div class="alert-banner alert-danger">
+            <div class="alert-icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="alert-title">Vahinkokorvaus hylätty</div>
+              <div class="alert-desc">Päätöstila: <strong>${claim.decision}</strong>. Ei maksettavaa korvausta.</div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <!-- Header Card -->
+        <div class="detail-header-card">
+          <div class="detail-title-row">
+            <div class="detail-claim-title">
+              <h2>Vahinko ${claim.claim_id}</h2>
+              <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 2px;">
+                Saapunut: ${createdDate} &bull; Tila: <strong>${claim.decision}</strong>
+              </div>
+            </div>
+            <div>
+              ${isHitLPending ? '<span class="badge badge-hitl" style="font-size:0.8rem; padding:4px 10px;">Odottaa käsittelyä</span>' : ''}
+              ${isApproved ? '<span class="badge badge-approved" style="font-size:0.8rem; padding:4px 10px;">Ratkaistu (Hyväksytty)</span>' : ''}
+              ${isRejected ? '<span class="badge badge-rejected" style="font-size:0.8rem; padding:4px 10px;">Ratkaistu (Hylätty)</span>' : ''}
+            </div>
+          </div>
+
+          <div class="detail-meta-grid">
+            <div>
+              <div class="meta-item-label">Hakijan tunnus</div>
+              <div class="meta-item-value">${claim.claimant_id}</div>
+            </div>
+            <div>
+              <div class="meta-item-label">Haettu summa</div>
+              <div class="meta-item-value">${formatEUR(claim.claimed_amount)}</div>
+            </div>
+            <div>
+              <div class="meta-item-label">Laskettu korvaus</div>
+              <div class="meta-item-value" style="color:var(--primary-700);">${formatEUR(claim.calculated_payout)}</div>
+            </div>
+            <div>
+              <div class="meta-item-label">Audit-tunnus</div>
+              <div class="meta-item-value" style="font-family:monospace; font-size:0.75rem;">${claim.id.substring(0, 8)}...</div>
+            </div>
+          </div>
+        </div>
+
+        ${bannerHtml}
+
+        <!-- AI Triaging & Calculation Details -->
+        <div class="card">
+          <div class="card-header">
+            <span>Sääntömoottorin ja tekoälyn analyysi</span>
+            <span style="font-size:0.72rem; color:var(--slate-500);">Deterministinen arvio</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 0.88rem; line-height: 1.5; color: var(--slate-800); margin-bottom: 1rem;">
+              ${escapeHtml(claim.ai_reasoning || 'Ei tallennettuja perusteluja.')}
+            </p>
+
+            ${claim.human_notes ? `
+              <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:6px; padding:0.75rem 1rem; margin-top:0.75rem;">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--slate-600); margin-bottom:4px; text-transform:uppercase;">Käsittelijän merkintä:</div>
+                <div style="font-size:0.85rem; color:var(--slate-800);">${escapeHtml(claim.human_notes)}</div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Financial Breakdown Card -->
+        <div class="card">
+          <div class="card-header">
+            <span>Korvauslaskelman erittely</span>
+            <span style="font-size:0.72rem; color:var(--slate-500);">Tarkka vakuutusmatematiikka</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="math-table">
+              <tr>
+                <td>Haettu vahingon määrä (Alkuperäinen vahinko)</td>
+                <td class="val-col">${formatEUR(claim.claimed_amount)}</td>
+              </tr>
+              <tr>
+                <td>Sovellettu korvausperuste / Lauseke</td>
+                <td class="val-col" style="font-family:inherit;">Koti- ja matkavakuutus</td>
+              </tr>
+              <tr>
+                <td>Omavastuu &amp; vähennykset</td>
+                <td class="val-col" style="color:var(--rose-600);">- ${formatEUR(claim.claimed_amount - claim.calculated_payout)}</td>
+              </tr>
+              <tr class="total-row">
+                <td>Maksettava nettokorvaus</td>
+                <td class="val-col">${formatEUR(claim.calculated_payout)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Adjuster Decision Workbench -->
+        <div class="decision-card">
+          <div class="decision-title">Käsittelijän ratkaisu &amp; toimenpiteet</div>
+          <div class="decision-form-grid">
+            <div>
+              <label class="form-label">Korvaussumma (€)</label>
+              <input type="number" step="0.01" id="adj-payout" class="form-input" value="${claim.calculated_payout.toFixed(2)}">
+            </div>
+            <div>
+              <label class="form-label">Käsittelijän muistiinpanot &amp; perustelu</label>
+              <input type="text" id="adj-notes" class="form-input" placeholder="Kirjaa ratkaisun perustelu vakuutusjärjestelmään...">
+            </div>
+          </div>
+          <div class="decision-buttons">
+            <button class="btn btn-reject" onclick="submitDecision('${claim.id}', 'MANUALLY_REJECTED')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              <span>Hylkää korvaus</span>
+            </button>
+            <button class="btn btn-approve" onclick="submitDecision('${claim.id}', 'MANUALLY_APPROVED')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Hyväksy korvaus maksuun</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function submitDecision(auditId, decision) {
+      const payoutInput = document.getElementById('adj-payout');
+      const notesInput = document.getElementById('adj-notes');
+
+      const finalPayout = parseFloat(payoutInput ? payoutInput.value : 0) || 0;
+      const notes = notesInput && notesInput.value.trim() ? notesInput.value.trim() : (decision === 'MANUALLY_APPROVED' ? 'Käsittelijä hyväksynyt korvauksen työpöydältä.' : 'Käsittelijä hylännyt hakemuksen.');
+
+      try {
+        const res = await fetch('/api/claims/hitl-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            audit_id: auditId,
+            decision: decision,
+            final_payout: finalPayout,
+            human_notes: notes
+          })
+        });
+
+        if (res.ok) {
+          showToast(decision === 'MANUALLY_APPROVED' ? 'Korvaus hyväksytty ja siirretty maksatukseen.' : 'Vahinko merkitty hylätyksi.');
+          await loadData();
+        } else {
+          alert('Virhe tallennettaessa päätöstä.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast-msg');
+      t.textContent = text;
+      t.style.display = 'flex';
+      setTimeout(() => { t.style.display = 'none'; }, 3500);
+    }
+
+    async function openPolicyModal() {
+      document.getElementById('policy-modal').style.display = 'flex';
+      const body = document.getElementById('policy-modal-body');
+      try {
+        const res = await fetch('/tools/policy-clauses');
+        const clauses = await res.json();
+        body.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            ${clauses.map(c => `
+              <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:6px; padding:0.75rem 1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <strong style="color:var(--slate-900); font-size:0.88rem;">${c.title}</strong>
+                  <span class="badge" style="background:#e2e8f0; color:var(--slate-700); font-family:monospace;">${c.clause_code}</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--slate-600); margin-bottom:0.5rem;">${c.coverage_details}</div>
+                <div style="font-size:0.75rem; color:var(--slate-500); display:flex; gap:1rem;">
+                  <span>Perusomavastuu: <strong>${formatEUR(c.standard_deductible)}</strong></span>
+                  <span>Enimmäiskatto: <strong>${formatEUR(c.max_coverage_limit)}</strong></span>
+                  <span>Rikosilmoitus: <strong>${c.requires_police_report ? 'Vaaditaan' : 'Ei vaadita'}</strong></span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch {
+        body.innerHTML = 'Virhe ladattaessa ehtoja.';
+      }
+    }
+
+    function closePolicyModal() {
+      document.getElementById('policy-modal').style.display = 'none';
+    }
+
+    function openSimulateModal() {
+      document.getElementById('simulate-modal').style.display = 'flex';
+    }
+
+    function closeSimulateModal() {
+      document.getElementById('simulate-modal').style.display = 'none';
+    }
+
+    async function triggerSim(type) {
+      closeSimulateModal();
+      let payload;
+
+      if (type === 1) {
+        payload = {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-882",
+          claimed_amount: 800.00,
+          calculated_payout: 570.00,
+          decision: "ESCALATED_HITL",
+          ai_reasoning: "Korvaussumma 570,00 € ylittää 500 € STP-valtuusrajan. Lauseke HOME_BIKE_01: Sovellettu 2v ikävähennystä 10% (-80,00 €) ja omavastuuta -150,00 €. Rikosilmoitus vahvistettu poliisille.",
+          human_notes: "Automaattinen eskalaatio: vaatii käsittelijän valtuutuksen."
+        };
+      } else if (type === 2) {
+        payload = {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-412",
+          claimed_amount: 450.00,
+          calculated_payout: 300.00,
+          decision: "AUTO_APPROVED",
+          ai_reasoning: "Matalan riskin pyörävahinko (300,00 € <= 500 €). Rikosilmoitus OK, omavastuu -150 € vähennetty. Ei petosindikaattoreita.",
+          human_notes: "Suora STP-läpimeno (Straight-Through Processing)."
+        };
+      } else if (type === 3) {
+        payload = {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-RISK-99",
+          claimed_amount: 650.00,
+          calculated_payout: 0.00,
+          decision: "ESCALATED_HITL",
+          ai_reasoning: "KORKEA PETOSRISKI (Pisteet: 0.95 >= 0.30): Vahinkoilmoituksessa havaittu useita riskisanoja ('käteinen', 'ei kuittia', 'pimeä').",
+          human_notes: "Ohjattu suoraan erikoistutkintaan (SIU)."
+        };
+      } else {
+        payload = {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-776",
+          claimed_amount: 1800.00,
+          calculated_payout: 1650.00,
+          decision: "ESCALATED_HITL",
+          ai_reasoning: "Kannettavan tietokoneen rikkoutuminen. Lauseke HOME_ELEC_01. Omavastuu -150 € vähennetty. Korvaussumma 1650,00 € > 500 €.",
+          human_notes: "Vaatii ostokuitin ja huoltoarvion tarkistuksen."
+        };
+      }
+
+      await fetch('/api/claims/decision-callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      showToast('Uusi testivahinko luotu jonoon.');
+      await loadData();
+      selectClaim(claims[0].id);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ==========================================
+    // Comprehensive System Settings & Storage
+    // ==========================================
+    const STORAGE_KEY_API = 'claimsentry_openai_key';
+    const STORAGE_KEY_MODEL = 'claimsentry_openai_model';
+    const STORAGE_KEY_CUSTOM_MODEL = 'claimsentry_custom_model';
+    const STORAGE_KEY_TEMP = 'claimsentry_temperature';
+    const STORAGE_KEY_MAX_ITER = 'claimsentry_max_iterations';
+    const STORAGE_KEY_N8N_URL = 'claimsentry_n8n_url';
+    const STORAGE_KEY_STP_LIMIT = 'claimsentry_stp_limit';
+    const STORAGE_KEY_FRAUD_THRESH = 'claimsentry_fraud_thresh';
+    const STORAGE_KEY_REQ_POLICE = 'claimsentry_req_police';
+    const STORAGE_KEY_REQ_RECEIPT = 'claimsentry_req_receipt';
+    const STORAGE_KEY_DEPREC_RATE = 'claimsentry_deprec_rate';
+    const STORAGE_KEY_HOME_DED = 'claimsentry_home_ded';
+    const STORAGE_KEY_TRAVEL_DED = 'claimsentry_travel_ded';
+    const STORAGE_KEY_RETENTION = 'claimsentry_retention_days';
+    const STORAGE_KEY_SIU_EMAIL = 'claimsentry_siu_email';
+    const STORAGE_KEY_SIU_AUTO = 'claimsentry_siu_auto';
+    const STORAGE_KEY_USER_NAME = 'claimsentry_user_name';
+    const STORAGE_KEY_USER_ID = 'claimsentry_user_id';
+    const STORAGE_KEY_USER_ROLE = 'claimsentry_user_role';
+    const STORAGE_KEY_USER_LIMIT = 'claimsentry_user_limit';
+    const STORAGE_KEY_TOAST_ENABLED = 'claimsentry_toast_enabled';
+    const STORAGE_KEY_AUTOSELECT = 'claimsentry_autoselect';
+
+    // Getters with defaults
+    const getStoredApiKey = () => localStorage.getItem(STORAGE_KEY_API) || '';
+    const getStoredModel = () => localStorage.getItem(STORAGE_KEY_MODEL) || 'gpt-4o-mini';
+    const getStoredCustomModel = () => localStorage.getItem(STORAGE_KEY_CUSTOM_MODEL) || '';
+    const getStoredTemperature = () => parseFloat(localStorage.getItem(STORAGE_KEY_TEMP)) || 0.10;
+    const getStoredMaxIterations = () => parseInt(localStorage.getItem(STORAGE_KEY_MAX_ITER)) || 5;
+    const getStoredN8nUrl = () => localStorage.getItem(STORAGE_KEY_N8N_URL) || 'http://localhost:5678/webhook/claims-triage';
+    const getStoredStpLimit = () => parseFloat(localStorage.getItem(STORAGE_KEY_STP_LIMIT)) || 500.00;
+    const getStoredFraudThreshold = () => parseFloat(localStorage.getItem(STORAGE_KEY_FRAUD_THRESH)) || 0.30;
+    const getStoredReqPolice = () => localStorage.getItem(STORAGE_KEY_REQ_POLICE) !== 'false';
+    const getStoredReqReceipt = () => localStorage.getItem(STORAGE_KEY_REQ_RECEIPT) !== 'false';
+    const getStoredDeprecRate = () => parseInt(localStorage.getItem(STORAGE_KEY_DEPREC_RATE)) || 10;
+    const getStoredHomeDed = () => parseFloat(localStorage.getItem(STORAGE_KEY_HOME_DED)) || 150.00;
+    const getStoredTravelDed = () => parseFloat(localStorage.getItem(STORAGE_KEY_TRAVEL_DED)) || 100.00;
+    const getStoredRetentionDays = () => parseInt(localStorage.getItem(STORAGE_KEY_RETENTION)) || 365;
+    const getStoredSiuEmail = () => localStorage.getItem(STORAGE_KEY_SIU_EMAIL) || 'siu-alerts@claimsentry.internal';
+    const getStoredSiuAuto = () => localStorage.getItem(STORAGE_KEY_SIU_AUTO) !== 'false';
+    const getStoredUserName = () => localStorage.getItem(STORAGE_KEY_USER_NAME) || 'M. Virtanen';
+    const getStoredUserId = () => localStorage.getItem(STORAGE_KEY_USER_ID) || 'ADJ-FI-4029';
+    const getStoredUserRole = () => localStorage.getItem(STORAGE_KEY_USER_ROLE) || 'Korvauskäsittelijä';
+    const getStoredUserLimit = () => parseFloat(localStorage.getItem(STORAGE_KEY_USER_LIMIT)) || 5000.00;
+    const getStoredToastEnabled = () => localStorage.getItem(STORAGE_KEY_TOAST_ENABLED) !== 'false';
+    const getStoredAutoSelect = () => localStorage.getItem(STORAGE_KEY_AUTOSELECT) !== 'false';
+
+    function openSettingsView() {
+      document.getElementById('workbench-view').style.display = 'none';
+      document.getElementById('settings-view').style.display = 'block';
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+      const setNav = document.getElementById('nav-item-settings');
+      if (setNav) setNav.classList.add('active');
+      loadAllSettingsIntoPage();
+    }
+
+    function closeSettingsView() {
+      document.getElementById('settings-view').style.display = 'none';
+      document.getElementById('workbench-view').style.display = 'flex';
+      const el = document.getElementById('nav-item-' + (activeNavFilter === 'ESCALATED_HITL' ? 'hitl' : (activeNavFilter === 'AUTO_APPROVED' ? 'auto' : (activeNavFilter === 'MANUAL_RESOLVED' ? 'manual' : 'all'))));
+      if (el) switchNavTab(activeNavFilter, el);
+    }
+
+    function switchSettingsTab(tabName) {
+      const tabs = ['ai', 'rules', 'db', 'user', 'data'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('btn-tab-' + t);
+        const sec = document.getElementById('section-settings-' + t);
+        if (btn) btn.classList.toggle('active', t === tabName);
+        if (sec) sec.style.display = t === tabName ? 'block' : 'none';
+      });
+    }
+
+    function onModelSelectChange() {
+      const sel = document.getElementById('set-model');
+      const customInput = document.getElementById('set-custom-model');
+      if (sel && customInput) {
+        customInput.style.display = sel.value === 'CUSTOM' ? 'block' : 'none';
+      }
+    }
+
+    function loadAllSettingsIntoPage() {
+      // AI Tab
+      const key = getStoredApiKey();
+      document.getElementById('set-api-key').value = key;
+      document.getElementById('set-model').value = getStoredModel();
+      document.getElementById('set-custom-model').value = getStoredCustomModel();
+      document.getElementById('set-temperature').value = getStoredTemperature();
+      document.getElementById('badge-temp-val').textContent = getStoredTemperature().toFixed(2);
+      document.getElementById('set-max-iter').value = getStoredMaxIterations();
+      document.getElementById('badge-iter-val').textContent = getStoredMaxIterations();
+      document.getElementById('set-n8n-url').value = getStoredN8nUrl();
+      document.getElementById('page-test-key-status').innerHTML = '';
+
+      const badge = document.getElementById('page-agent-status-badge');
+      if (badge) {
+        if (key) {
+          badge.textContent = `OpenAI (${getStoredModel()}) aktiivinen`;
+          badge.className = 'status-pill success';
+        } else {
+          badge.textContent = 'Lokaali sääntömoottori aktiivinen';
+          badge.className = 'status-pill warning';
+        }
+      }
+
+      onModelSelectChange();
+
+      // Rules Tab
+      document.getElementById('set-stp-limit').value = getStoredStpLimit().toFixed(2);
+      document.getElementById('set-fraud-thresh').value = getStoredFraudThreshold();
+      document.getElementById('badge-fraud-val').textContent = getStoredFraudThreshold().toFixed(2);
+      document.getElementById('set-req-police').checked = getStoredReqPolice();
+      document.getElementById('set-req-receipt').checked = getStoredReqReceipt();
+      document.getElementById('set-deprec-rate').value = getStoredDeprecRate();
+      document.getElementById('set-home-ded').value = getStoredHomeDed().toFixed(2);
+      document.getElementById('set-travel-ded').value = getStoredTravelDed().toFixed(2);
+
+      // DB Tab
+      document.getElementById('set-retention-days').value = getStoredRetentionDays();
+      document.getElementById('set-siu-email').value = getStoredSiuEmail();
+      document.getElementById('set-siu-auto-alert').checked = getStoredSiuAuto();
+
+      // User Tab
+      document.getElementById('set-user-name').value = getStoredUserName();
+      document.getElementById('set-user-id').value = getStoredUserId();
+      document.getElementById('set-user-role').value = getStoredUserRole();
+      document.getElementById('set-user-limit').value = getStoredUserLimit().toFixed(2);
+      document.getElementById('set-toast-enabled').checked = getStoredToastEnabled();
+      document.getElementById('set-autoselect-first').checked = getStoredAutoSelect();
+    }
+
+    function saveAllSystemSettings() {
+      // AI Tab
+      const key = document.getElementById('set-api-key').value.trim();
+      const model = document.getElementById('set-model').value;
+      const customModel = document.getElementById('set-custom-model').value.trim();
+      const temp = parseFloat(document.getElementById('set-temperature').value) || 0.10;
+      const maxIter = parseInt(document.getElementById('set-max-iter').value) || 5;
+      const n8nUrl = document.getElementById('set-n8n-url').value.trim();
+
+      if (key) {
+        localStorage.setItem(STORAGE_KEY_API, key);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_API);
+      }
+      localStorage.setItem(STORAGE_KEY_MODEL, model);
+      localStorage.setItem(STORAGE_KEY_CUSTOM_MODEL, customModel);
+      localStorage.setItem(STORAGE_KEY_TEMP, temp.toString());
+      localStorage.setItem(STORAGE_KEY_MAX_ITER, maxIter.toString());
+      localStorage.setItem(STORAGE_KEY_N8N_URL, n8nUrl);
+
+      // Rules Tab
+      const stpLimit = parseFloat(document.getElementById('set-stp-limit').value) || 500.00;
+      const fraudThresh = parseFloat(document.getElementById('set-fraud-thresh').value) || 0.30;
+      const reqPolice = document.getElementById('set-req-police').checked;
+      const reqReceipt = document.getElementById('set-req-receipt').checked;
+      const deprecRate = parseInt(document.getElementById('set-deprec-rate').value) || 10;
+      const homeDed = parseFloat(document.getElementById('set-home-ded').value) || 150.00;
+      const travelDed = parseFloat(document.getElementById('set-travel-ded').value) || 100.00;
+
+      localStorage.setItem(STORAGE_KEY_STP_LIMIT, stpLimit.toString());
+      localStorage.setItem(STORAGE_KEY_FRAUD_THRESH, fraudThresh.toString());
+      localStorage.setItem(STORAGE_KEY_REQ_POLICE, reqPolice.toString());
+      localStorage.setItem(STORAGE_KEY_REQ_RECEIPT, reqReceipt.toString());
+      localStorage.setItem(STORAGE_KEY_DEPREC_RATE, deprecRate.toString());
+      localStorage.setItem(STORAGE_KEY_HOME_DED, homeDed.toString());
+      localStorage.setItem(STORAGE_KEY_TRAVEL_DED, travelDed.toString());
+
+      // DB Tab
+      const retention = parseInt(document.getElementById('set-retention-days').value) || 365;
+      const siuEmail = document.getElementById('set-siu-email').value.trim();
+      const siuAuto = document.getElementById('set-siu-auto-alert').checked;
+
+      localStorage.setItem(STORAGE_KEY_RETENTION, retention.toString());
+      localStorage.setItem(STORAGE_KEY_SIU_EMAIL, siuEmail);
+      localStorage.setItem(STORAGE_KEY_SIU_AUTO, siuAuto.toString());
+
+      // User Tab
+      const userName = document.getElementById('set-user-name').value.trim() || 'M. Virtanen';
+      const userId = document.getElementById('set-user-id').value.trim() || 'ADJ-FI-4029';
+      const userRole = document.getElementById('set-user-role').value.trim() || 'Korvauskäsittelijä';
+      const userLimit = parseFloat(document.getElementById('set-user-limit').value) || 5000.00;
+      const toastEnabled = document.getElementById('set-toast-enabled').checked;
+      const autoSelect = document.getElementById('set-autoselect-first').checked;
+
+      localStorage.setItem(STORAGE_KEY_USER_NAME, userName);
+      localStorage.setItem(STORAGE_KEY_USER_ID, userId);
+      localStorage.setItem(STORAGE_KEY_USER_ROLE, userRole);
+      localStorage.setItem(STORAGE_KEY_USER_LIMIT, userLimit.toString());
+      localStorage.setItem(STORAGE_KEY_TOAST_ENABLED, toastEnabled.toString());
+      localStorage.setItem(STORAGE_KEY_AUTOSELECT, autoSelect.toString());
+
+      // Update UI components across the app
+      updateNavAgentStatus();
+      updateUserProfileDisplay();
+      updateSidebarRuleLimits();
+
+      // Update status pill on page
+      const badge = document.getElementById('page-agent-status-badge');
+      if (badge) {
+        if (key) {
+          badge.textContent = `OpenAI (${model}) aktiivinen`;
+          badge.className = 'status-pill success';
+        } else {
+          badge.textContent = 'Lokaali sääntömoottori aktiivinen';
+          badge.className = 'status-pill warning';
+        }
+      }
+
+      showToast('Kaikki järjestelmäasetukset tallennettu onnistuneesti.');
+    }
+
+    function togglePageKeyVisibility() {
+      const input = document.getElementById('set-api-key');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    async function testPageApiKey() {
+      const key = document.getElementById('set-api-key').value.trim();
+      const spinner = document.getElementById('page-test-key-spinner');
+      const text = document.getElementById('page-test-key-text');
+      const status = document.getElementById('page-test-key-status');
+
+      if (!key) {
+        status.innerHTML = '<span style="color:var(--amber-700);">Syötä ensin API-avain (sk-...).</span>';
+        return;
+      }
+
+      spinner.style.display = 'inline-block';
+      text.textContent = 'Testataan...';
+      status.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/agent/validate-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: key })
+        });
+        const data = await res.json();
+        if (data.isValid || data.is_valid) {
+          status.innerHTML = '<span style="color:var(--emerald-600); font-weight:600;">Yhteys OpenAI-rajapintaan toimii.</span>';
+        } else {
+          status.innerHTML = '<span style="color:var(--rose-600); font-weight:600;">Virheellinen avain tai yhteys hylättiin.</span>';
+        }
+      } catch (err) {
+        status.innerHTML = `<span style="color:var(--rose-600);">Yhteysvirhe: ${err.message}</span>`;
+      } finally {
+        spinner.style.display = 'none';
+        text.textContent = 'Testaa yhteys';
+      }
+    }
+
+    function clearPageApiKey() {
+      localStorage.removeItem(STORAGE_KEY_API);
+      document.getElementById('set-api-key').value = '';
+      document.getElementById('page-test-key-status').innerHTML = '<span style="color:var(--slate-500);">Avain poistettu.</span>';
+      updateNavAgentStatus();
+      showToast('API-avain poistettu selaimesta.');
+    }
+
+    async function testN8nConnection() {
+      const url = document.getElementById('set-n8n-url').value.trim();
+      const spinner = document.getElementById('n8n-spinner');
+      const status = document.getElementById('n8n-status-text');
+
+      spinner.style.display = 'inline-block';
+      status.textContent = 'Testataan...';
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        await fetch(url, { method: 'GET', signal: controller.signal });
+        clearTimeout(timeoutId);
+        status.innerHTML = '<span style="color:var(--emerald-600); font-weight:600;">n8n-palvelin tavoitettavissa.</span>';
+      } catch (err) {
+        status.innerHTML = '<span style="color:var(--amber-700); font-weight:500;">n8n ei vastaa (Käytetään suoraa .NET-väylää).</span>';
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    async function testDbConnection() {
+      const spinner = document.getElementById('db-spinner');
+      const latencyText = document.getElementById('db-latency-text');
+      spinner.style.display = 'inline-block';
+      latencyText.textContent = 'Mitataan...';
+
+      const t0 = performance.now();
+      try {
+        await fetch('/health');
+        const t1 = performance.now();
+        const elapsed = (t1 - t0).toFixed(1);
+        latencyText.innerHTML = `<span style="color:var(--emerald-600); font-weight:600;">Vasteaika: ${elapsed} ms (Moottori aktiivinen)</span>`;
+      } catch (err) {
+        latencyText.innerHTML = `<span style="color:var(--rose-600);">Virhe: ${err.message}</span>`;
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    async function generateBatchTestClaims() {
+      const testCases = [
+        {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-" + Math.floor(100 + Math.random() * 900),
+          claimed_amount: 780.00,
+          calculated_payout: 552.00,
+          decision: "ESCALATED_HITL",
+          ai_reasoning: "Tunturi e-City sähköpyörä varastettu. Lauseke HOME_BIKE_01: 2v ikävähennys -78 €, omavastuu -150 €. Korvaus 552 € > STP-raja.",
+          human_notes: "Suoritettu eräajona."
+        },
+        {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-" + Math.floor(100 + Math.random() * 900),
+          claimed_amount: 320.00,
+          calculated_payout: 170.00,
+          decision: "AUTO_APPROVED",
+          ai_reasoning: "Samsung Galaxy A54 näyttörikko. Lauseke HOME_ELEC_01: Omavastuu -150 € vähennetty. Korvaus 170 € <= STP-raja.",
+          human_notes: "Suora automaattihyväksyntä."
+        },
+        {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-RISK-77",
+          claimed_amount: 980.00,
+          calculated_payout: 0.00,
+          decision: "ESCALATED_HITL",
+          ai_reasoning: "Korkea petosriski (0.85). Syöte: 'maksettu pimeänä käteisellä, kuititon, perintäuhka'.",
+          human_notes: "Ohjattu SIU-esitutkintaan."
+        },
+        {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-" + Math.floor(100 + Math.random() * 900),
+          claimed_amount: 1450.00,
+          calculated_payout: 1300.00,
+          decision: "ESCALATED_HITL",
+          ai_reasoning: "Lenovo ThinkPad rikkoutunut nestevahingossa. Lauseke HOME_ELEC_01. Korvaus 1300 € > STP-raja.",
+          human_notes: "Vaatii kuitin tarkastuksen."
+        },
+        {
+          claim_id: "CLM-" + Math.floor(1000 + Math.random() * 9000),
+          claimant_id: "CUST-FI-" + Math.floor(100 + Math.random() * 900),
+          claimed_amount: 450.00,
+          calculated_payout: 350.00,
+          decision: "AUTO_APPROVED",
+          ai_reasoning: "Samsonite matkalaukku kadonnut lennolla HEL-ARN. Lauseke TRAVEL_LUGG_01. Omavastuu -100 € vähennetty.",
+          human_notes: "STP-suoramaksu matkavakuutuksesta."
+        }
+      ];
+
+      for (const tc of testCases) {
+        await fetch('/api/claims/decision-callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tc)
+        });
+      }
+
+      await loadData();
+      showToast('5 uutta testivahinkoa luotu onnistuneesti jonoihin.');
+    }
+
+    function resetAllDefaults() {
+      if (!confirm('Haluatko varmasti palauttaa kaikki järjestelmäasetukset oletusarvoihin?')) return;
+      localStorage.removeItem(STORAGE_KEY_STP_LIMIT);
+      localStorage.removeItem(STORAGE_KEY_FRAUD_THRESH);
+      localStorage.removeItem(STORAGE_KEY_REQ_POLICE);
+      localStorage.removeItem(STORAGE_KEY_REQ_RECEIPT);
+      localStorage.removeItem(STORAGE_KEY_DEPREC_RATE);
+      localStorage.removeItem(STORAGE_KEY_HOME_DED);
+      localStorage.removeItem(STORAGE_KEY_TRAVEL_DED);
+      localStorage.removeItem(STORAGE_KEY_RETENTION);
+      localStorage.removeItem(STORAGE_KEY_SIU_EMAIL);
+      localStorage.removeItem(STORAGE_KEY_SIU_AUTO);
+      localStorage.removeItem(STORAGE_KEY_USER_NAME);
+      localStorage.removeItem(STORAGE_KEY_USER_ID);
+      localStorage.removeItem(STORAGE_KEY_USER_ROLE);
+      localStorage.removeItem(STORAGE_KEY_USER_LIMIT);
+      localStorage.removeItem(STORAGE_KEY_TOAST_ENABLED);
+      localStorage.removeItem(STORAGE_KEY_AUTOSELECT);
+      localStorage.removeItem(STORAGE_KEY_MODEL);
+      localStorage.removeItem(STORAGE_KEY_CUSTOM_MODEL);
+      localStorage.removeItem(STORAGE_KEY_TEMP);
+      localStorage.removeItem(STORAGE_KEY_MAX_ITER);
+      localStorage.removeItem(STORAGE_KEY_N8N_URL);
+
+      loadAllSettingsIntoPage();
+      updateNavAgentStatus();
+      updateUserProfileDisplay();
+      updateSidebarRuleLimits();
+      showToast('Kaikki oletusasetukset palautettu.');
+    }
+
+    function clearAllLocalStorage() {
+      if (!confirm('Haluatko varmasti tyhjentää kaikki selaimeen tallennetut asetukset ja avaimet?')) return;
+      localStorage.clear();
+      loadAllSettingsIntoPage();
+      updateNavAgentStatus();
+      updateUserProfileDisplay();
+      updateSidebarRuleLimits();
+      showToast('Selaimen paikallinen muisti tyhjennetty.');
+    }
+
+    function updateSidebarRuleLimits() {
+      const stp = getStoredStpLimit();
+      const fraud = getStoredFraudThreshold();
+      const el = document.getElementById('sidebar-rule-limits');
+      if (el) {
+        el.innerHTML = `<strong>AIKA Sääntöraja:</strong><br>STP-hyväksyntä &le; ${formatEUR(stp)}<br>Petosriskikatto &lt; ${fraud.toFixed(2)}`;
+      }
+    }
+
+    function updateUserProfileDisplay() {
+      const name = getStoredUserName();
+      const role = getStoredUserRole();
+      const nameEl = document.getElementById('nav-user-name');
+      const roleEl = document.getElementById('nav-user-role');
+      const avatarEl = document.getElementById('nav-user-avatar');
+
+      if (nameEl) nameEl.textContent = name;
+      if (roleEl) roleEl.textContent = role;
+      if (avatarEl) {
+        const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) || 'MV';
+        avatarEl.textContent = initials;
+      }
+    }
+
+    function updateNavAgentStatus() {
+      const key = getStoredApiKey();
+      const model = getStoredModel();
+      const dot = document.getElementById('nav-health-dot');
+      const text = document.getElementById('nav-health-text');
+      const badge = document.getElementById('modal-agent-mode-badge');
+
+      if (key && key.trim().length > 0) {
+        if (dot) dot.style.background = '#3b82f6';
+        if (text) text.textContent = `Tekoälyagentti (OpenAI / ${model}) aktiivinen`;
+        if (badge) {
+          badge.textContent = `OpenAI (${model})`;
+          badge.style.background = 'var(--primary-50)';
+          badge.style.color = 'var(--primary-700)';
+          badge.style.borderColor = 'rgba(37,99,235,0.2)';
+        }
+      } else {
+        if (dot) dot.style.background = '#10b981';
+        if (text) text.textContent = 'Deterministinen sääntömoottori aktiivinen (Lokaali)';
+        if (badge) {
+          badge.textContent = 'Lokaali deterministinen moottori';
+          badge.style.background = 'var(--emerald-50)';
+          badge.style.color = 'var(--emerald-700)';
+          badge.style.borderColor = 'rgba(5,150,105,0.2)';
+        }
+      }
+    }
+
+    // Backwards-compatible modal hooks
+    function openSettingsModal() { openSettingsView(); }
+    function closeSettingsModal() { closeSettingsView(); }
+    function toggleKeyVisibility() { togglePageKeyVisibility(); }
+    function saveSettings() { saveAllSystemSettings(); }
+    function clearApiKey() { clearPageApiKey(); }
+    function testApiKey() { testPageApiKey(); }
+
+    // ==========================================
+    // AI Agent Triaging Logic & Presets
+    // ==========================================
+    let lastTriagedAuditId = null;
+
+    const PRESETS = {
+      1: {
+        category: 'HOME_CONTENTS',
+        clause: 'HOME_BIKE_01',
+        amount: 850.00,
+        age: 2,
+        hasPoliceReport: true,
+        desc: "Sähköpyörä varastettu lukitusta pyörävarastosta Espoon Tapiolassa yöllä. Lukitusrikko todettu ja tehty rikosilmoitus poliisille."
+      },
+      2: {
+        category: 'HOME_CONTENTS',
+        clause: 'HOME_ELEC_01',
+        amount: 380.00,
+        age: 1,
+        hasPoliceReport: false,
+        desc: "iPhone 14 putosi vahingossa laattalattialle keittiössä. Näyttö ja runko rikki. Korjausarvio 380 euroa valtuutetulta huollolta."
+      },
+      3: {
+        category: 'HOME_CONTENTS',
+        clause: 'HOME_BIKE_01',
+        amount: 950.00,
+        age: 0,
+        hasPoliceReport: false,
+        desc: "Ostin maantiepyörän Torista pimeänä käteisellä ilman kuittia. Nyt se on varastettu. Tarvitsen rahat heti perintäkulujen takia."
+      },
+      4: {
+        category: 'HOME_CONTENTS',
+        clause: 'HOME_ELEC_01',
+        amount: 1800.00,
+        age: 1,
+        hasPoliceReport: false,
+        desc: "Kahvikuppi kaatui työpöydällä MacBook Pron päälle. Laite ei enää käynnisty, ostopäivä 14 kk sitten. Huollon lausunto ohessa."
+      }
+    };
+
+    function selectPreset(type, btnEl) {
+      document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      const rnd = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('agent-claim-id').value = `CLM-${rnd}`;
+
+      if (type === 'CUSTOM') {
+        document.getElementById('agent-claimant-id').value = `CUST-FI-${Math.floor(100 + Math.random() * 900)}`;
+        document.getElementById('agent-amount').value = '';
+        document.getElementById('agent-age').value = '1';
+        document.getElementById('agent-police-report').checked = true;
+        document.getElementById('agent-desc').value = '';
+        return;
+      }
+
+      const p = PRESETS[type];
+      if (!p) return;
+
+      document.getElementById('agent-claimant-id').value = type === 3 ? 'CUST-RISK-99' : `CUST-FI-${rnd % 899 + 100}`;
+      document.getElementById('agent-category').value = p.category;
+      document.getElementById('agent-clause-code').value = p.clause;
+      document.getElementById('agent-amount').value = p.amount.toFixed(2);
+      document.getElementById('agent-age').value = p.age;
+      document.getElementById('agent-police-report').checked = p.hasPoliceReport;
+      document.getElementById('agent-desc').value = p.desc;
+    }
+
+    function onCategoryChange() {
+      const cat = document.getElementById('agent-category').value;
+      const clauseSelect = document.getElementById('agent-clause-code');
+      if (cat === 'TRAVEL_LOSS') {
+        clauseSelect.value = 'TRAVEL_LUGG_01';
+      } else {
+        if (clauseSelect.value === 'TRAVEL_LUGG_01') {
+          clauseSelect.value = 'HOME_BIKE_01';
+        }
+      }
+    }
+
+    function openAgentModal() {
+      updateNavAgentStatus();
+      if (!document.getElementById('agent-claim-id').value) {
+        selectPreset(1, document.querySelector('.preset-chip'));
+      }
+      document.getElementById('agent-modal').style.display = 'flex';
+    }
+
+    function closeAgentModal() {
+      document.getElementById('agent-modal').style.display = 'none';
+    }
+
+    async function runAgentTriage() {
+      const claimId = document.getElementById('agent-claim-id').value.trim();
+      const claimantId = document.getElementById('agent-claimant-id').value.trim();
+      const category = document.getElementById('agent-category').value;
+      const clauseCode = document.getElementById('agent-clause-code').value;
+      const amount = parseFloat(document.getElementById('agent-amount').value) || 0;
+      const age = parseInt(document.getElementById('agent-age').value) || 0;
+      const hasPoliceReport = document.getElementById('agent-police-report').checked;
+      const desc = document.getElementById('agent-desc').value.trim();
+
+      if (!claimId || !claimantId || amount <= 0 || !desc) {
+        alert('Täytä kaikki pakolliset kentät (vahinkotunnus, hakija, summa ja vahinkokuvaus).');
+        return;
+      }
+
+      const apiKey = getStoredApiKey();
+      const model = getStoredModel();
+
+      // UI state
+      const btnRun = document.getElementById('btn-run-agent');
+      const spinner = document.getElementById('agent-spinner');
+      const label = document.getElementById('agent-run-label');
+      btnRun.disabled = true;
+      spinner.style.display = 'inline-block';
+      label.textContent = 'Agentti suorittaa triagointia...';
+
+      const traceSec = document.getElementById('agent-trace-section');
+      const traceContainer = document.getElementById('agent-trace-container');
+      const summaryCard = document.getElementById('agent-decision-summary');
+
+      traceSec.style.display = 'block';
+      summaryCard.style.display = 'none';
+      traceContainer.innerHTML = '<div style="color:var(--slate-400); padding:0.5rem;">Käynnistetään agenttisilmukka...</div>';
+
+      try {
+        const payload = {
+          apiKey: apiKey || null,
+          model: model || 'gpt-4o-mini',
+          claimId: claimId,
+          claimantId: claimantId,
+          category: category,
+          incidentDescription: desc,
+          claimedAmount: amount,
+          clauseCode: clauseCode,
+          itemAgeYears: age,
+          hasPoliceReport: hasPoliceReport
+        };
+
+        const res = await fetch('/api/agent/triage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Triagointi epäonnistui (${res.status}): ${errText}`);
+        }
+
+        const data = await res.json();
+        lastTriagedAuditId = data.audit_id || data.auditId;
+
+        // Render Trace Steps
+        const trace = data.trace || [];
+        document.getElementById('trace-step-count').textContent = `${trace.length} vaihetta`;
+
+        traceContainer.innerHTML = trace.map(step => {
+          const stepType = (step.step_type || step.stepType || 'THINKING').toUpperCase();
+          const name = step.name || step.Name || '';
+          const details = step.details || step.Details || '';
+          const time = new Date(step.timestamp || step.Timestamp || Date.now()).toLocaleTimeString('fi-FI');
+
+          let itemClass = 'thinking';
+          let badgeClass = 'badge-thinking';
+          let badgeLabel = 'Päättely';
+
+          if (stepType === 'TOOL_CALL') {
+            itemClass = 'tool-call';
+            badgeClass = 'badge-tool';
+            badgeLabel = 'Työkalukutsu';
+          } else if (stepType === 'TOOL_RESULT') {
+            itemClass = 'tool-result';
+            badgeClass = 'badge-result';
+            badgeLabel = 'Työkalun vastaus';
+          }
+
+          return `
+            <div class="trace-item ${itemClass}">
+              <div class="trace-header">
+                <span class="trace-title">
+                  <span class="trace-badge ${badgeClass}">${badgeLabel}</span>
+                  <strong>${escapeHtml(name)}</strong>
+                </span>
+                <span class="trace-time">${time}</span>
+              </div>
+              <div class="trace-content">${escapeHtml(details)}</div>
+            </div>
+          `;
+        }).join('');
+
+        // Render Decision Summary
+        const rec = (data.recommendation || '').toUpperCase();
+        const reqHitL = data.requires_human_review ?? data.requiresHumanReview;
+        const payout = data.calculated_payout ?? data.calculatedPayout ?? 0;
+        const fraud = data.fraud_risk_score ?? data.fraudRiskScore ?? 0;
+        const just = data.justification || '';
+
+        const badgeEl = document.getElementById('res-rec-badge');
+        if (rec === 'APPROVE' && !reqHitL) {
+          badgeEl.innerHTML = '<span class="badge badge-approved" style="font-size:0.85rem; padding:4px 10px;">STP HYVÄKSYTTY</span>';
+        } else if (rec === 'REJECT') {
+          badgeEl.innerHTML = '<span class="badge badge-rejected" style="font-size:0.85rem; padding:4px 10px;">HYLÄTTY</span>';
+        } else {
+          badgeEl.innerHTML = '<span class="badge badge-hitl" style="font-size:0.85rem; padding:4px 10px;">ESKALOITU KÄSITTELIJÄLLE (HitL)</span>';
+        }
+
+        document.getElementById('res-payout-val').textContent = formatEUR(payout);
+        document.getElementById('res-justification').textContent = just;
+        document.getElementById('res-fraud-score').textContent = fraud.toFixed(2);
+        document.getElementById('res-hitl-req').textContent = reqHitL ? 'Kyllä (HitL)' : 'Ei (Automaattinen)';
+
+        summaryCard.style.display = 'block';
+
+        // Refresh workbench data
+        await loadData();
+        showToast('Tekoälyagentin triagointi valmistui!');
+
+      } catch (err) {
+        traceContainer.innerHTML = `<div style="color:var(--rose-400); padding:0.5rem;">Virhe: ${escapeHtml(err.message)}</div>`;
+      } finally {
+        btnRun.disabled = false;
+        spinner.style.display = 'none';
+        label.textContent = 'Käynnistä tekoälyagentti';
+      }
+    }
+
+    function openClaimInWorkbench() {
+      closeAgentModal();
+      if (lastTriagedAuditId) {
+        selectClaim(lastTriagedAuditId);
+      }
+    }
+
+    // Initialize
+    updateNavAgentStatus();
+    updateUserProfileDisplay();
+    updateSidebarRuleLimits();
+    loadData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+name: CI/CD Quality & Security Gate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-dotnet-tests:
+    name: .NET 9 Deterministic Engine Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore backend/AikaEngine.slnx || dotnet restore backend/src/AikaEngine.WebApi/AikaEngine.WebApi.csproj
+
+      - name: Build Backend
+        run: dotnet build backend/tests/AikaEngine.UnitTests/AikaEngine.UnitTests.csproj -c Release
+
+      - name: Execute Deterministic Math & Fraud Unit Tests
+        run: dotnet test backend/tests/AikaEngine.UnitTests/AikaEngine.UnitTests.csproj --no-build -c Release --verbosity normal
+
+  quality-gate-evals:
+    name: DeepEval & Pytest Agent Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r evals/requirements.txt
+
+      - name: Run Pytest Quality & Escalation Tests
+        run: |
+          pytest evals/test_n8n_agent_quality.py -v
+
+  docker-compose-validate:
+    name: Docker Compose Syntax & Configuration Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration
+        run: docker compose config

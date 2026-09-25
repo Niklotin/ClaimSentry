@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "aika-claims": {
+      "command": "python",
+      "args": [
+        "/path/to/ClaimSentry/mcp/aika_mcp_server.py"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "claim_id": "CLM-1002",
+  "claimant_id": "CUST-FI-9042",
+  "category": "BICYCLE",
+  "incident_description": "Maastopyörä anastettiin takapihalta yön aikana. En ole vielä ehtinyt tehdä rikosilmoitusta.",
+  "claimed_amount": 600.00,
+  "clause_code": "HOME_BIKE_01",
+  "item_age_years": 2,
+  "has_police_report": false
+}

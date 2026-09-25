@@ -1,0 +1,10 @@
+{
+  "claim_id": "CLM-1001",
+  "claimant_id": "CUST-FI-8821",
+  "category": "BICYCLE",
+  "incident_description": "Polkupyöräni (Jopo) varastettiin lukittuna rautatieaseman pyörätelineestä Helsingissä. Rikosilmoitus tehty poliisille.",
+  "claimed_amount": 450.00,
+  "clause_code": "HOME_BIKE_01",
+  "item_age_years": 1,
+  "has_police_report": true
+}

@@ -1,0 +1,51 @@
+# Build results (.NET)
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE / Editor
+.vscode/
+.vs/
+.idea/
+*.swp
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+ENV/
+
+# Environment and Secrets
+.env
+*.local.json
+
+# Logs
+*.log
+
+# Docker / Runtime data
+n8n_data/
+postgres_data/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

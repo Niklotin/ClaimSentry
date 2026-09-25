@@ -1,0 +1,341 @@
+{
+  "name": "AIKA Claims & Fraud Triaging Platform",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "claim-triage",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "node-webhook-intake",
+      "name": "Claim Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "claim-triage-webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze and triage the following insurance claim:\n\nClaim ID: {{ $json.body.claim_id }}\nClaimant ID: {{ $json.body.claimant_id }}\nCategory: {{ $json.body.category }}\nIncident Description: {{ $json.body.incident_description }}\nClaimed Amount: {{ $json.body.claimed_amount }}\nClause Code: {{ $json.body.clause_code }}\nItem Age (Years): {{ $json.body.item_age_years }}\nHas Police Report: {{ $json.body.has_police_report }}\n\nInstructions:\n1. Query coverage rules using the SearchPolicyTool for category '{{ $json.body.category }}' or clause '{{ $json.body.clause_code }}'.\n2. Call FraudCheckTool with claimant ID '{{ $json.body.claimant_id }}', incident description, and claimed amount.\n3. Call CalculatePayoutTool with claimed amount, clause code, item age, and police report flag. NEVER compute payout in your head.\n4. Apply ClaimSentry Triaging Rules:\n   - Set requires_human_review = true IF:\n     a) calculated eligible_amount > 500.00 EUR, OR\n     b) fraud risk_score >= 0.30, OR\n     c) policy requires a police report and none was provided (has_police_report == false).\n   - If requires_human_review is false and eligible_amount > 0, set recommendation = 'APPROVE'.\n   - If eligible_amount == 0 and no coverage or rejected, set recommendation = 'REJECT'.\n   - If escalated, set recommendation = 'ESCALATE'.\n5. Produce the structured output JSON with complete justification.",
+        "options": {
+          "systemMessage": "You are the ClaimSentry Autonomous Claims Triaging Assistant. Your job is to analyze the user's incident report, call the appropriate tools to find policy coverage, compute accurate deterministic payouts, and evaluate fraud risk.\nNEVER invent policy rules or calculate deductions in your head; always use the calculation tool.\nIF the net payout exceeds 500 EUR OR the fraud risk score is >= 0.30 OR a mandatory police report is missing, you MUST set 'requires_human_review': true."
+        }
+      },
+      "id": "node-ai-agent",
+      "name": "AIKA Triage Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "node-openai-model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        380,
+        520
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credential-id",
+          "name": "OpenAI API Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"claim_id\": {\n      \"type\": \"string\",\n      \"description\": \"The ID of the claim\"\n    },\n    \"recommendation\": {\n      \"type\": \"string\",\n      \"enum\": [\"APPROVE\", \"REJECT\", \"ESCALATE\"],\n      \"description\": \"Recommendation decision\"\n    },\n    \"requires_human_review\": {\n      \"type\": \"boolean\",\n      \"description\": \"True if payout > 500 EUR, fraud risk >= 0.30, or missing mandatory police report\"\n    },\n    \"calculated_payout\": {\n      \"type\": \"number\",\n      \"description\": \"Deterministic eligible payout amount from calculation tool\"\n    },\n    \"policy_code\": {\n      \"type\": \"string\",\n      \"description\": \"Applied policy clause code\"\n    },\n    \"fraud_risk_score\": {\n      \"type\": \"number\",\n      \"description\": \"Evaluated fraud risk score from fraud tool\"\n    },\n    \"justification\": {\n      \"type\": \"string\",\n      \"description\": \"Detailed explanation citing policy clauses, calculations, and risk flags\"\n    }\n  },\n  \"required\": [\"claim_id\", \"recommendation\", \"requires_human_review\", \"calculated_payout\", \"policy_code\", \"justification\"]\n}"
+      },
+      "id": "node-structured-parser",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "name": "SearchPolicyTool",
+        "description": "Retrieve coverage details, deductibles, limits, and police report requirements for a policy category (e.g. BICYCLE, ELECTRONICS, LUGGAGE, LIABILITY).",
+        "method": "GET",
+        "url": "={{ ($env.AIKA_ENGINE_URL || 'http://aika-engine:5000') + '/tools/policy-clauses' }}",
+        "sendQuery": true,
+        "parametersQuery": {
+          "values": [
+            {
+              "name": "category",
+              "value": "={{ $fromAI('category', 'Policy category to search for, e.g. BICYCLE, ELECTRONICS, LUGGAGE') }}"
+            }
+          ]
+        }
+      },
+      "id": "node-tool-policy",
+      "name": "SearchPolicyTool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "name": "CalculatePayoutTool",
+        "description": "Deterministic financial calculation of depreciation, deductible, coverage cap, and police report compliance. Returns exact eligible payout amount.",
+        "method": "POST",
+        "url": "={{ ($env.AIKA_ENGINE_URL || 'http://aika-engine:5000') + '/tools/calculate-payout' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"claimed_amount\": {{ $fromAI('claimed_amount', 'Claimed amount in EUR as a number') }},\n  \"clause_code\": \"{{ $fromAI('clause_code', 'Policy clause code, e.g. HOME_BIKE_01') }}\",\n  \"item_age_years\": {{ $fromAI('item_age_years', 'Age of the item in full years as a number') }},\n  \"has_police_report\": {{ $fromAI('has_police_report', 'Boolean whether police report was filed and provided') }}\n}"
+      },
+      "id": "node-tool-calculator",
+      "name": "CalculatePayoutTool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "name": "FraudCheckTool",
+        "description": "Deterministic fraud evaluation engine. Checks suspicious keywords, claimant history, velocity, and amount anomalies. Returns risk_score and is_high_risk.",
+        "method": "POST",
+        "url": "={{ ($env.AIKA_ENGINE_URL || 'http://aika-engine:5000') + '/tools/fraud-check' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"claimant_id\": \"{{ $fromAI('claimant_id', 'The claimant ID string') }}\",\n  \"incident_description\": \"{{ $fromAI('incident_description', 'Full incident description from the claim') }}\",\n  \"claimed_amount\": {{ $fromAI('claimed_amount', 'Total claimed amount as a number') }}\n}"
+      },
+      "id": "node-tool-fraud",
+      "name": "FraudCheckTool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-hitl",
+              "leftValue": "={{ $json.output.requires_human_review }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-hitl-router",
+      "name": "HitL Escalation Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        920,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.AIKA_ENGINE_URL || 'http://aika-engine:5000') + '/api/claims/decision-callback' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"claim_id\": \"{{ $json.output.claim_id }}\",\n  \"claimant_id\": \"{{ $('Claim Intake Webhook').first().json.body.claimant_id }}\",\n  \"claimed_amount\": {{ $('Claim Intake Webhook').first().json.body.claimed_amount }},\n  \"calculated_payout\": {{ $json.output.calculated_payout }},\n  \"decision\": \"ESCALATED_HITL\",\n  \"ai_reasoning\": \"{{ $json.output.justification }}\",\n  \"human_notes\": \"Escalated for human review (Payout > 500 EUR, fraud risk, or missing documentation)\"\n}",
+        "options": {}
+      },
+      "id": "node-callback-escalated",
+      "name": "Record Escalated Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.AIKA_ENGINE_URL || 'http://aika-engine:5000') + '/api/claims/decision-callback' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"claim_id\": \"{{ $json.output.claim_id }}\",\n  \"claimant_id\": \"{{ $('Claim Intake Webhook').first().json.body.claimant_id }}\",\n  \"claimed_amount\": {{ $('Claim Intake Webhook').first().json.body.claimed_amount }},\n  \"calculated_payout\": {{ $json.output.calculated_payout }},\n  \"decision\": \"{{ $json.output.recommendation === 'APPROVE' ? 'AUTO_APPROVED' : 'REJECTED' }}\",\n  \"ai_reasoning\": \"{{ $json.output.justification }}\",\n  \"human_notes\": \"Processed automatically by AIKA Engine without human intervention\"\n}",
+        "options": {}
+      },
+      "id": "node-callback-auto",
+      "name": "Record Auto Decision Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"claim_id\": \"{{ $('AIKA Triage Agent').first().json.output.claim_id }}\",\n  \"recommendation\": \"{{ $('AIKA Triage Agent').first().json.output.recommendation }}\",\n  \"requires_human_review\": {{ $('AIKA Triage Agent').first().json.output.requires_human_review }},\n  \"calculated_payout\": {{ $('AIKA Triage Agent').first().json.output.calculated_payout }},\n  \"policy_code\": \"{{ $('AIKA Triage Agent').first().json.output.policy_code }}\",\n  \"fraud_risk_score\": {{ $('AIKA Triage Agent').first().json.output.fraud_risk_score || 0 }},\n  \"justification\": \"{{ $('AIKA Triage Agent').first().json.output.justification }}\",\n  \"audit_id\": \"{{ $json.audit_id }}\",\n  \"audit_status\": \"{{ $json.status }}\",\n  \"processed_at\": \"{{ $json.timestamp }}\"\n}",
+        "options": {}
+      },
+      "id": "node-respond-webhook",
+      "name": "Respond to Caller",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Claim Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "AIKA Triage Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AIKA Triage Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AIKA Triage Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchPolicyTool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AIKA Triage Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CalculatePayoutTool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AIKA Triage Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FraudCheckTool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AIKA Triage Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AIKA Triage Agent": {
+      "main": [
+        [
+          {
+            "node": "HitL Escalation Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HitL Escalation Router": {
+      "main": [
+        [
+          {
+            "node": "Record Escalated Callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Auto Decision Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Escalated Callback": {
+      "main": [
+        [
+          {
+            "node": "Respond to Caller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Auto Decision Callback": {
+      "main": [
+        [
+          {
+            "node": "Respond to Caller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
